@@ -1,0 +1,6 @@
+Job 8407439 dispatched
+password: LAGQvRCi
+---------- Begin Solver Output -----------
+Condor submit: 'neos.submit'
+Condor submit: 'watchdog.submit'
+Job submitted to NEOS HTCondor pool.
