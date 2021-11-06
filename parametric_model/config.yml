@@ -1,0 +1,10 @@
+# package
+package_name: parametric_model
+
+# solver_path = 'C:\\w64\\glpsol'
+solver: 'cplex'
+
+# redundancy_checker
+constraint_loosener: 1e-9
+
+
