@@ -1,10 +1,11 @@
 import numpy as np
 import pyomo.environ as pmo
 
+from parametric_model.config import config
 from parametric_model.processing.inputs import get_rows, get_cols, matrix_to_dict
 
 
-class RedundancyChecker:
+class RedundancyChecker():
     """
     A class which remove redundant rows for a constraint system Ax <= b.
 
@@ -23,15 +24,17 @@ class RedundancyChecker:
         reduced_b: b with redundant rows removed   
     """
 
-    def __init__(self, A, b, relax_tol=1e-6, zero_tol=1e-6):
+    def __init__(self, A, b, 
+                 relax_tol=config.redundancy_checker_config.relax_tol, 
+                 zero_tol=config.redundancy_checker_config.zero_tol):
         """
         Inits class and create opt model ready to be run.
 
         Args:
-            A: attribute
-            b: attribute
-            relax_tol: attribute
-            zero_tol: attribute
+            A: attribute, see class docstring
+            b: attribute, see class docstring
+            relax_tol: attribute, see class docstring
+            zero_tol: attribute, see class docstring
 
         Returns:
             None
@@ -78,10 +81,8 @@ class RedundancyChecker:
         self.model.dual = pmo.Suffix(direction=pmo.Suffix.IMPORT)
         self.model.constraints = pmo.ConstraintList()
         for c in self.model.c:
-            self.model.constraints.add(
-                sum(self.model.A[c, i] * self.model.x[i]
-                    for i in self.model.n) <= self.model.b[c]
-            )
+            self.model.constraints.add(sum(self.model.A[c, i] * self.model.x[i]
+                                           for i in self.model.n) <= self.model.b[c])
         
         self.solver = pmo.SolverFactory('cplex')
 
@@ -111,10 +112,9 @@ class RedundancyChecker:
             # relax chosen constraint
             self.model.b[c] += self.relax_tol
             # set up chosen constraint as the new obj
-            self.model.obj = pmo.Objective(
-                expr=-sum(self.model.A[c, i] * self.model.x[i]
-                          for i in self.model.n) + (self.model.b[c])
-            )
+            self.model.obj = pmo.Objective(expr=-sum(self.model.A[c, i] 
+                                                     * self.model.x[i] for i in self.model.n) 
+                                           + self.model.b[c])
             self.solver.solve(self.model, tee=False)
             # if obj is bigger than 0, mark constarint as redundant
             self.slack[c-1] = pmo.value(self.model.obj)

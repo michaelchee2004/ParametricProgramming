@@ -5,6 +5,7 @@ package_name: parametric_model
 solver: 'cplex'
 
 # redundancy_checker
-constraint_loosener: 1e-9
+relax_tol: 1e-6
+zero_tol: 1e-6
 
 
