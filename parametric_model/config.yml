@@ -1,5 +1,10 @@
 # package
-package_name: parametric_model
+app_name: parametric_model
+
+# inputs
+rc_test_data_file: rc_test_data.csv
+
+allclose_tol: 1e-6
 
 # solver_path = 'C:\\w64\\glpsol'
 solver: 'cplex'

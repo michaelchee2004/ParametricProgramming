@@ -1,8 +1,9 @@
 import numpy as np
 import pyomo.environ as pmo
 
-from parametric_model.config import config
-from parametric_model.processing.inputs import get_rows, get_cols, matrix_to_dict
+import parametric_model
+from parametric_model.config.core import config
+from parametric_model.processing.inputs import get_rows, get_cols, matrix_to_dict, vector_to_dict
 
 
 class RedundancyChecker():
@@ -69,7 +70,7 @@ class RedundancyChecker():
             None
         """
         A_init = matrix_to_dict(self.A)
-        b_init = matrix_to_dict(self.b)
+        b_init = vector_to_dict(self.b)
 
         # define pyomo model
         self.model = pmo.ConcreteModel()
@@ -117,7 +118,7 @@ class RedundancyChecker():
                                            + self.model.b[c])
             self.solver.solve(self.model, tee=False)
             # if obj is bigger than 0, mark constarint as redundant
-            self.slack[c-1] = pmo.value(self.model.obj)
+            # self.slack[c-1] = pmo.value(self.model.obj)
             if pmo.value(self.model.obj) > self.zero_tol:
                 self.redundancy[c-1] = 1
             
