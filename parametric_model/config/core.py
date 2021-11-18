@@ -31,7 +31,9 @@ class Config(BaseModel):
 
 def get_and_parse_config(config_file_path: Path=CONFIG_FILE_PATH):
     if config_file_path.is_file():
-        return  load(open(config_file_path, 'r').read())
+        with open(config_file_path, 'r') as config_file:
+            parsed_config = load(config_file.read())
+        return  parsed_config
     raise OSError('Did not find file at path: {config_file_path}')
 
 

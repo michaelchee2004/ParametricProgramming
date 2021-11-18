@@ -1,10 +1,9 @@
-numpy >= 1.21.4
-pyomo >= 6.1.2
-pydantic >= 1.8.2
-tox >=3.24.4
+numpy
+pyomo==6.1.2
+pydantic
+tox
 pathlib
 strictyaml
 typing
-logging
 joblib
 ruamel.yaml
