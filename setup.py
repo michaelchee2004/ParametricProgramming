@@ -10,8 +10,8 @@ NAME = 'parametric-programming'
 DESCRIPTION = "A solver for quadratic mult-parametric programming."
 URL = "https://github.com/michaelchee2004/ParametricProgramming"
 EMAIL = "michaelchee2004@gmail.com"
-AUTHOR = "cwmchee"
-REQUIRES_PYTHON = "=3.7.0"
+AUTHOR = "Michael Chee"
+REQUIRES_PYTHON = ">=3.9.0"
 
 long_description = DESCRIPTION
 
@@ -19,9 +19,10 @@ long_description = DESCRIPTION
 about = {}
 ROOT_DIR = Path(__file__).resolve().parent
 REQUIREMENTS_DIR = ROOT_DIR / 'requirements'
-PACKAGE_DIR = ROOT_DIR / 'model'
+PACKAGE_DIR = ROOT_DIR / 'parametric_model'
 with open(PACKAGE_DIR / "VERSION") as f:
     _version = f.read().strip()
+    print(_version)
     about["__version__"] = _version
 
 
@@ -48,7 +49,7 @@ setup(
     install_requires=list_reqs(),
     extras_require={},
     include_package_data=True,
-    license="GNU General Public License v3.0,
+    license="GNU General Public License v3.0",
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -56,7 +57,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],

@@ -1,4 +1,10 @@
-numpy ~= 1.18.5
-pyomo ~= 5.7.1
-pydantic ~= 3.7.4.3
-tox ~=3.24.4
+numpy >= 1.21.4
+pyomo >= 6.1.2
+pydantic >= 1.8.2
+tox >=3.24.4
+pathlib
+strictyaml
+typing
+logging
+joblib
+ruamel.yaml

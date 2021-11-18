@@ -1,0 +1,102 @@
+action: GLOB, msg: packaging
+cwd: C:\Users\user1\documents\github\parametricprogramming
+cmd: 'C:\Users\user1\AppData\Local\Programs\Python\Python39\python.exe' setup.py sdist --formats=zip --dist-dir 'C:\Users\user1\documents\github\parametricprogramming\.tox\dist'
+0.0.1
+running sdist
+running egg_info
+creating parametric_programming.egg-info
+writing parametric_programming.egg-info\PKG-INFO
+writing dependency_links to parametric_programming.egg-info\dependency_links.txt
+writing requirements to parametric_programming.egg-info\requires.txt
+writing top-level names to parametric_programming.egg-info\top_level.txt
+writing manifest file 'parametric_programming.egg-info\SOURCES.txt'
+reading manifest file 'parametric_programming.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+warning: no files found matching '*.txt'
+warning: no files found matching '*.pkl'
+warning: manifest_maker: MANIFEST.in, line 4: 'recursive-include' expects <dir> <pattern1> <pattern2> ...
+
+warning: manifest_maker: MANIFEST.in, line 5: 'recursive-exclude' expects <dir> <pattern1> <pattern2> ...
+
+warning: no previously-included files found matching '*.log'
+warning: no previously-included files found matching '*.cfg'
+warning: no previously-included files matching '__pycache__' found under directory '*'
+warning: no previously-included files matching '*.py[co]' found under directory '*'
+adding license file 'LICENSE'
+writing manifest file 'parametric_programming.egg-info\SOURCES.txt'
+running check
+creating parametric-programming-0.0.1
+creating parametric-programming-0.0.1\parametric_model
+creating parametric-programming-0.0.1\parametric_model\config
+creating parametric-programming-0.0.1\parametric_model\data
+creating parametric-programming-0.0.1\parametric_model\processing
+creating parametric-programming-0.0.1\parametric_model\solvers
+creating parametric-programming-0.0.1\parametric_programming.egg-info
+creating parametric-programming-0.0.1\requirements
+copying files to parametric-programming-0.0.1...
+copying LICENSE -> parametric-programming-0.0.1
+copying MANIFEST.in -> parametric-programming-0.0.1
+copying README.md -> parametric-programming-0.0.1
+copying pyproject.toml -> parametric-programming-0.0.1
+copying setup.py -> parametric-programming-0.0.1
+copying parametric_model\VERSION -> parametric-programming-0.0.1\parametric_model
+copying parametric_model\__init__.py -> parametric-programming-0.0.1\parametric_model
+copying parametric_model\config.yml -> parametric-programming-0.0.1\parametric_model
+copying parametric_model\generate_regions.py -> parametric-programming-0.0.1\parametric_model
+copying parametric_model\config\__init__.py -> parametric-programming-0.0.1\parametric_model\config
+copying parametric_model\config\core.py -> parametric-programming-0.0.1\parametric_model\config
+copying parametric_model\data\rc_test_data.csv -> parametric-programming-0.0.1\parametric_model\data
+copying parametric_model\processing\__init__.py -> parametric-programming-0.0.1\parametric_model\processing
+copying parametric_model\processing\inputs.py -> parametric-programming-0.0.1\parametric_model\processing
+copying parametric_model\processing\redundancy_checker.py -> parametric-programming-0.0.1\parametric_model\processing
+copying parametric_model\solvers\__init__.py -> parametric-programming-0.0.1\parametric_model\solvers
+copying parametric_model\solvers\quadratic_solver.py -> parametric-programming-0.0.1\parametric_model\solvers
+copying parametric_model\solvers\region_generator.py -> parametric-programming-0.0.1\parametric_model\solvers
+copying parametric_model\solvers\region_solver.py -> parametric-programming-0.0.1\parametric_model\solvers
+copying parametric_programming.egg-info\PKG-INFO -> parametric-programming-0.0.1\parametric_programming.egg-info
+copying parametric_programming.egg-info\SOURCES.txt -> parametric-programming-0.0.1\parametric_programming.egg-info
+copying parametric_programming.egg-info\dependency_links.txt -> parametric-programming-0.0.1\parametric_programming.egg-info
+copying parametric_programming.egg-info\requires.txt -> parametric-programming-0.0.1\parametric_programming.egg-info
+copying parametric_programming.egg-info\top_level.txt -> parametric-programming-0.0.1\parametric_programming.egg-info
+copying requirements\requirements.txt -> parametric-programming-0.0.1\requirements
+copying requirements\test_requirements.txt -> parametric-programming-0.0.1\requirements
+Writing parametric-programming-0.0.1\setup.cfg
+creating C:\Users\user1\documents\github\parametricprogramming\.tox\dist
+creating 'C:\Users\user1\documents\github\parametricprogramming\.tox\dist\parametric-programming-0.0.1.zip' and adding 'parametric-programming-0.0.1' to it
+adding 'parametric-programming-0.0.1'
+adding 'parametric-programming-0.0.1\parametric_model'
+adding 'parametric-programming-0.0.1\parametric_programming.egg-info'
+adding 'parametric-programming-0.0.1\requirements'
+adding 'parametric-programming-0.0.1\LICENSE'
+adding 'parametric-programming-0.0.1\MANIFEST.in'
+adding 'parametric-programming-0.0.1\PKG-INFO'
+adding 'parametric-programming-0.0.1\pyproject.toml'
+adding 'parametric-programming-0.0.1\README.md'
+adding 'parametric-programming-0.0.1\setup.cfg'
+adding 'parametric-programming-0.0.1\setup.py'
+adding 'parametric-programming-0.0.1\parametric_model\config'
+adding 'parametric-programming-0.0.1\parametric_model\data'
+adding 'parametric-programming-0.0.1\parametric_model\processing'
+adding 'parametric-programming-0.0.1\parametric_model\solvers'
+adding 'parametric-programming-0.0.1\parametric_model\config.yml'
+adding 'parametric-programming-0.0.1\parametric_model\generate_regions.py'
+adding 'parametric-programming-0.0.1\parametric_model\VERSION'
+adding 'parametric-programming-0.0.1\parametric_model\__init__.py'
+adding 'parametric-programming-0.0.1\parametric_model\config\core.py'
+adding 'parametric-programming-0.0.1\parametric_model\config\__init__.py'
+adding 'parametric-programming-0.0.1\parametric_model\data\rc_test_data.csv'
+adding 'parametric-programming-0.0.1\parametric_model\processing\inputs.py'
+adding 'parametric-programming-0.0.1\parametric_model\processing\redundancy_checker.py'
+adding 'parametric-programming-0.0.1\parametric_model\processing\__init__.py'
+adding 'parametric-programming-0.0.1\parametric_model\solvers\quadratic_solver.py'
+adding 'parametric-programming-0.0.1\parametric_model\solvers\region_generator.py'
+adding 'parametric-programming-0.0.1\parametric_model\solvers\region_solver.py'
+adding 'parametric-programming-0.0.1\parametric_model\solvers\__init__.py'
+adding 'parametric-programming-0.0.1\parametric_programming.egg-info\dependency_links.txt'
+adding 'parametric-programming-0.0.1\parametric_programming.egg-info\PKG-INFO'
+adding 'parametric-programming-0.0.1\parametric_programming.egg-info\requires.txt'
+adding 'parametric-programming-0.0.1\parametric_programming.egg-info\SOURCES.txt'
+adding 'parametric-programming-0.0.1\parametric_programming.egg-info\top_level.txt'
+adding 'parametric-programming-0.0.1\requirements\requirements.txt'
+adding 'parametric-programming-0.0.1\requirements\test_requirements.txt'
+removing 'parametric-programming-0.0.1' (and everything under it)
