@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import parametric_model
+from parametric_model.config.core import config
 
 
 MODEL_ROOT = Path(parametric_model.__file__).parent
@@ -18,6 +19,35 @@ def read_Ab(file_name: Path) -> np.ndarray:
         A = Ab[:, :-1]
         b = Ab[:, -1].flatten()
         return A, b
+    raise OSError('Did not find file at path: {data_file_path}')
+
+
+def read_QmAb(file_name: Path) -> np.ndarray:
+    data_file_path = DATA_DIR / file_name
+    if data_file_path.is_file():
+        QmAb = np.loadtxt(data_file_path)
+        x_size = get_cols(QmAb) - 1
+        Q = QmAb[:x_size, :-1]
+        m = QmAb[x_size, :-1]
+        A = QmAb[x_size+1:, :-1]
+        b = QmAb[x_size+1:, -1].flatten()
+        return Q, m, A, b
+    raise OSError('Did not find file at path: {data_file_path}')
+
+
+def read_QmA_theta_b(file_name: Path) -> np.ndarray:
+    data_file_path = DATA_DIR / file_name
+    if data_file_path.is_file():
+        data = np.loadtxt(data_file_path)
+        theta_size = data[0, 0]
+        x_size = get_cols(data) - theta_size - 1
+        Q = data[1:1+x_size, :-theta_size-1]
+        m = data[1+x_size, :-theta_size-1]
+        A = data[1+x_size+1:, :-theta_size-1]
+        theta = data[1+x_size+1:, 
+                     x_size:x_size+theta_size]
+        b = data[1+x_size+1:, -1].flatten()
+        return Q, m, A, theta, b
     raise OSError('Did not find file at path: {data_file_path}')
 
 
@@ -65,3 +95,10 @@ def vector_to_dict(V: Union[list, np.ndarray]) -> dict:
 
     return V_dict
 
+
+def get_zeros_rows_index(matrix):
+    element_is_zero = np.isclose(matrix, 0.0,
+                               rtol=0.0,
+                               atol=config.other_config.allclose_tol)
+    row_is_zeros = np.all(element_is_zero, axis=1)
+    return np.where(row_is_zeros)

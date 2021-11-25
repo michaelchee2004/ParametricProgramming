@@ -12,3 +12,10 @@ def rc_test_data():
     Ab = Ab_collection(A, b)
     return Ab
 
+
+@pytest.fixture()
+def qp_test_data():
+    Q, m, A, b = read_Ab(config.app_config.rc_test_data_file)
+    QmAb_collection = collections.namedtuple('QmAb', ['Q', 'm', 'A', 'b'])
+    QmAb = QmAb_collection(Q, m, A, b)
+    return QmAb

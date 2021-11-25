@@ -14,8 +14,13 @@ class AppConfig(BaseModel):
     rc_test_data_file: str
 
 
+class SolverConfig(BaseModel):
+    solver_path: str
+    solver_setting: str
+    feas_tol: float
+
+
 class RedundancyCheckerConfig(BaseModel):
-    solver: str
     relax_tol: float
     zero_tol: float
 
@@ -23,8 +28,10 @@ class RedundancyCheckerConfig(BaseModel):
 class OtherConfig(BaseModel):
     allclose_tol: float
 
+
 class Config(BaseModel):
     app_config: AppConfig
+    solver_config: SolverConfig
     redundancy_checker_config: RedundancyCheckerConfig
     other_config: OtherConfig
 
@@ -40,6 +47,7 @@ def get_and_parse_config(config_file_path: Path=CONFIG_FILE_PATH):
 def validate_config(parsed_config):
     _config = Config(
         app_config=AppConfig(**parsed_config.data),
+        solver_config=SolverConfig(**parsed_config.data),
         redundancy_checker_config=RedundancyCheckerConfig(**parsed_config.data),
         other_config=OtherConfig(**parsed_config.data))
     return _config

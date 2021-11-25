@@ -6,11 +6,18 @@ rc_test_data_file: rc_test_data.csv
 
 allclose_tol: 1e-6
 
-# solver_path = 'C:\\w64\\glpsol'
-solver: 'cplex'
+# solver_path: 'C:\\w64\\glpsol'
+# solver: 'glpk'
+solver_path: 'C:\\cygwin64\\home\\user1\\Ipopt-3.12.12\\bin\\ipopt'
+solver_setting: 'ipopt'
 
 # redundancy_checker
 relax_tol: 1e-6
 zero_tol: 1e-6
+
+# quadratic_solver
+feas_tol: 1e-6
+
+
 
 

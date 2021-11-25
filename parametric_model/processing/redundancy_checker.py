@@ -14,6 +14,8 @@ class RedundancyChecker():
         A: a ndarray which is LHS of Ax <= b
         b: a ndarray which is RHS of Sx <= b
         model: pyomo model object for detecting redundancy
+        solver_path: location of executable for solver
+        solver_setting: which solver to use, a parameter for pyomo
         solver: pyomo solver object for solving model
         relax_tol: a float to relax a constraint being checked for redundancy
         zero_tol: a float, value higher than this is identified as higher than zero
@@ -26,6 +28,8 @@ class RedundancyChecker():
     """
 
     def __init__(self, A, b, 
+                 solver_path=config.solver_config.solver_path,
+                 solver=config.solver_config.solver_setting,
                  relax_tol=config.redundancy_checker_config.relax_tol, 
                  zero_tol=config.redundancy_checker_config.zero_tol):
         """
@@ -34,6 +38,8 @@ class RedundancyChecker():
         Args:
             A: attribute, see class docstring
             b: attribute, see class docstring
+            solver_path: attribute, see class docstring
+            solver_setting: attribute, see class docstring
             relax_tol: attribute, see class docstring
             zero_tol: attribute, see class docstring
 
@@ -46,6 +52,9 @@ class RedundancyChecker():
         # opt problem
         self.model = None
         self.solver = None
+        # solver
+        self.solver_path = solver_path
+        self.solver_setting = solver
         # tolerances
         self.relax_tol = relax_tol
         self.zero_tol = zero_tol
@@ -58,9 +67,9 @@ class RedundancyChecker():
         self.reduced_A = None
         self.reduced_b = None
 
-        self.create_model()
+        self._create_model()
 
-    def create_model(self):
+    def _create_model(self):
         """
         Create model object so that it can called when needed.
         
@@ -69,23 +78,22 @@ class RedundancyChecker():
         Returns:
             None
         """
-        A_init = matrix_to_dict(self.A)
-        b_init = vector_to_dict(self.b)
+        _A_init = matrix_to_dict(self.A)
+        _b_init = vector_to_dict(self.b)
 
         # define pyomo model
         self.model = pmo.ConcreteModel()
         self.model.n = pmo.RangeSet(1, self.x_size)
         self.model.c = pmo.RangeSet(1, self.c_size)
-        self.model.A = pmo.Param(self.model.c, self.model.n, initialize=A_init)
-        self.model.b = pmo.Param(self.model.c, mutable=True, initialize=b_init)
+        self.model.A = pmo.Param(self.model.c, self.model.n, initialize=_A_init)
+        self.model.b = pmo.Param(self.model.c, mutable=True, initialize=_b_init)
         self.model.x = pmo.Var(self.model.n)
         self.model.dual = pmo.Suffix(direction=pmo.Suffix.IMPORT)
         self.model.constraints = pmo.ConstraintList()
         for c in self.model.c:
             self.model.constraints.add(sum(self.model.A[c, i] * self.model.x[i]
                                            for i in self.model.n) <= self.model.b[c])
-        
-        self.solver = pmo.SolverFactory('cplex')
+        self.solver = pmo.SolverFactory(self.solver_setting, executable=self.solver_path)
 
     def remove_redundancy(self) -> None:
         """
