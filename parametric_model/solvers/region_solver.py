@@ -54,9 +54,9 @@ class RegionSolver:
 
     def _solve_theta(self):
         theta_only_rows = get_zeros_rows_index(self.A[:, :self.x_size])
-        # problem_b = self.b.copy()
-        # problem_b[theta_only_rows] = problem_b[theta_only_rows] 
-        _theta_problem = GenericSolver(self.A, self.b, self.Q, self.m)
+        problem_b = self.b.copy()
+        problem_b[theta_only_rows] = problem_b[theta_only_rows]
+        _theta_problem = GenericSolver(self.A, problem_b, self.Q, self.m)
         _theta_problem.solve()
         self.theta = _theta_problem.soln[-self.theta_size:]
 
@@ -236,13 +236,13 @@ A = np.array(
      # additional
      [.0, .0, -3.16515   , -3.7546    ],
      [.0, .0,  2.82163241, -2.09545779],
-     [.0, .0, 0.07350042,  0.05290033]]
+     [.0, .0, 0.07350042,  0.05290032]]
 )
 
 b = np.array(
     [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, .0, 1., .0, 1., 
     # additional 
-     -3.582575,  0.04398198,  0.06335021]
+     -3.582575,  0.04398198,  0.06335022]
 )
 
 m = np.array(

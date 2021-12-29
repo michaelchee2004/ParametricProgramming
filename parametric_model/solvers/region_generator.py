@@ -82,7 +82,7 @@ class ParametricSolver:
                 None,
                 None,
                 np.concatenate((added_A.copy(), next_added_A.copy()), axis=0),
-                np.concatenate((added_b.copy(), next_added_b.copy()-1e-6)),
+                np.concatenate((added_b.copy(), next_added_b.copy()-1e-7)),
                 None,
                 None,
                 False)

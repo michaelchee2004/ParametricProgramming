@@ -7,7 +7,7 @@ rc_test_data_file: rc_test_data.csv
 # is smaller than this value
 # Too small, not enough boundaries are removed
 # Too big, too many boundaries are removed
-allclose_tol: 1e-8
+allclose_tol: 1e-10
 
 # solver_path: 'C:\\w64\glpsol'
 # solver_setting: 'glpk'
@@ -21,5 +21,5 @@ zero_tol: 1e-6
 # quadratic_solver. Constraint with slack smaller than this is considered active
 # Too small, then active constraints are missed
 # Too big, then too many active constraints 
-feas_tol: 1e-3
+feas_tol: 1e-2
 
