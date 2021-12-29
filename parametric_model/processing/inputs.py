@@ -98,7 +98,44 @@ def vector_to_dict(V: Union[list, np.ndarray]) -> dict:
 
 def get_zeros_rows_index(matrix):
     element_is_zero = np.isclose(matrix, 0.0,
-                               rtol=0.0,
-                               atol=config.other_config.allclose_tol)
+                                 rtol=0.0,
+                                 atol=config.other_config.allclose_tol)
     row_is_zeros = np.all(element_is_zero, axis=1)
     return np.where(row_is_zeros)
+
+
+def check_duplicates(checked_object, checklist=None):
+    if checklist is None:
+        checklist_is_target = True
+        checklist = checked_object
+    else:
+        checklist_is_target = False
+
+    dup_rows = []
+    # Take each row in check_object,
+    for row in range(checked_object.shape[0]):
+        duplicate_loc = np.where(
+            np.all(
+                np.isclose(checklist,
+                           checked_object[row],
+                           rtol=0,
+                           atol=config.other_config.allclose_tol),
+                axis=1))
+
+        # np where returns a tuple, so duplicate_loc needs [0]
+        if checklist_is_target:
+            if duplicate_loc[0].shape[0] > 1:
+                dup_rows.append(duplicate_loc[0][1:])
+        else:
+            if duplicate_loc[0].shape[0] > 0:
+                dup_rows.append(row)
+
+    dup_rows = np.unique(dup_rows)
+    return dup_rows
+
+
+def remove_duplicates(checked_object, checklist=None):
+    dup_rows = check_duplicates(checked_object, checklist).tolist()
+    return np.delete(checked_object, dup_rows, axis=0)
+
+

@@ -94,6 +94,7 @@ class RedundancyChecker():
             self.model.constraints.add(sum(self.model.A[c, i] * self.model.x[i]
                                            for i in self.model.n) <= self.model.b[c])
         self.solver = pmo.SolverFactory(self.solver_setting, executable=self.solver_path)
+        self.solver.options['tol'] = 1e-12
 
     def remove_redundancy(self) -> None:
         """
@@ -111,6 +112,7 @@ class RedundancyChecker():
         # Then check if b-Ax to see if positive (constraint is loose).
         # If so, mark as redundant.
         self.redundancy = np.zeros([self.c_size])
+        self.slack = np.zeros([self.c_size])
 
         for c in self.model.c:
             # delete old obj
@@ -119,7 +121,8 @@ class RedundancyChecker():
             except:
                 pass
             # relax chosen constraint
-            self.model.b[c] += self.relax_tol
+            self.model.b[c] += self.relax_tol #* \
+                # np.max(np.abs(self.A[c-1, :]))/(np.abs(self.b[c-1]) if self.b[c-1]!=0. else 1.)
             # set up chosen constraint as the new obj
             self.model.obj = pmo.Objective(expr=-sum(self.model.A[c, i] 
                                                      * self.model.x[i] for i in self.model.n) 
@@ -131,8 +134,25 @@ class RedundancyChecker():
                 self.redundancy[c-1] = 1
             
             # revert relaxation of constraint
-            self.model.b[c] -= self.relax_tol
+            self.model.b[c] -= self.relax_tol #* \
+                # np.max(np.abs(self.A[c-1, :])) / \
+                # (np.abs(self.b[c-1]) if self.b[c-1] != 0. else 1.)
 
+        # print('slack=')
+        # print(self.slack)
         self.reduced_A = self.A[self.redundancy == 0]
         self.reduced_b = self.b[self.redundancy == 0]
         return self.reduced_A, self.reduced_b
+
+# A = np.array(
+#     [[ 0.0,  1.0],
+#      [-3.16515, -3.7546],
+#      [2.82163241, -2.09545779],
+#      [-0.07350042, -0.05290033]]
+# )
+
+# b = np.array([1., -3.58257501,  0.04384359, -0.06334207])
+
+# model = RedundancyChecker(A,b).remove_redundancy()
+# print(model)
+

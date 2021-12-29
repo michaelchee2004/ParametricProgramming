@@ -53,6 +53,9 @@ class RegionSolver:
         self.boundary_constant = None
 
     def _solve_theta(self):
+        theta_only_rows = get_zeros_rows_index(self.A[:, :self.x_size])
+        # problem_b = self.b.copy()
+        # problem_b[theta_only_rows] = problem_b[theta_only_rows] 
         _theta_problem = GenericSolver(self.A, self.b, self.Q, self.m)
         _theta_problem.solve()
         self.theta = _theta_problem.soln[-self.theta_size:]
@@ -61,7 +64,7 @@ class RegionSolver:
         # define A without theta, and ignore constraints with only theta terms
         self.x_problem_A = self.A[:, :-self.theta_size]
         # define b ignoring constraints with only theta terms
-        self.x_problem_b = self.b - np.dot(self.A[:, -self.theta_size:], self.theta)
+        self.x_problem_b = self.b - np.dot(self.A[:, -self.theta_size:], self.theta) 
         self.x_problem_Q = self.Q[:self.x_size, :self.x_size]
         self.x_problem_m = self.m[:self.x_size]
 
@@ -78,7 +81,10 @@ class RegionSolver:
         x_problem.solve()
         self.x = x_problem.soln
         self.duals = x_problem.duals
+        # print('duals')
+        # print(self.duals)
         self.active_const = x_problem.active_const
+        self.duals[np.logical_not(self.active_const).tolist()] = .0
 
     def _get_MN(self):
         self.M_len = self.x_size + get_rows(self.x_problem_A)
@@ -186,6 +192,12 @@ class RegionSolver:
             _insert_end = AG_with_theta_matrix.shape[0] + A_theta_only_rows.shape[0]
             boundary_slope[_insert_start:_insert_end, :] = A_theta_only_rows
         
+        # print('AG_with_theta_matrix')
+        # print(AG_with_theta_matrix)
+        # print('A_theta_only_rows')
+        # print(A_theta_only_rows)
+        # print('dual_boundaries_A')
+        # print(dual_boundaries_A)
         if dual_boundaries_A.shape[0]>=1:
             _insert_start = (AG_with_theta_matrix.shape[0]
                              + A_theta_only_rows.shape[0])
@@ -212,18 +224,25 @@ class RegionSolver:
 ########################################################################################
 A = np.array(
     [[1.0, .0, -3.16515, -3.7546],
-     [-1.0, .0, 3.16515, 3.7546],
+     [-1.0, .0, 3.16515, 3.7546], # problematic
      [-0.0609, .0, -0.17355, 0.2717],
      [-0.0064, .0, -0.06585, -0.4714],
-     [.0, 1.0, -1.81960, 3.2841],
+     [.0, 1.0, -1.81960, 3.2841], # problematic
      [.0, -1.0, 1.81960, -3.2841],
-     [.0, .0, 3.16515, 3.7546],
-     [.0, .0, 1.81960, -3.2841],
-     [.0, .0, -1.0, .0]]
+     [.0, .0, -1.0, .0],
+     [.0, .0, 1.,   .0],
+     [.0, .0, .0, -1.0],
+     [.0, .0, .0, 1.0],
+     # additional
+     [.0, .0, -3.16515   , -3.7546    ],
+     [.0, .0,  2.82163241, -2.09545779],
+     [.0, .0, 0.07350042,  0.05290033]]
 )
 
 b = np.array(
-    [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, 3.582575, -1.090200, .0]
+    [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, .0, 1., .0, 1., 
+    # additional 
+     -3.582575,  0.04398198,  0.06335021]
 )
 
 m = np.array(

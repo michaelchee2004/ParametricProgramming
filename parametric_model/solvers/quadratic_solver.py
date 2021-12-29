@@ -67,6 +67,7 @@ class GenericSolver:
         self.solver = pmo.SolverFactory(self.solver_setting, 
                                         tee=self.tee,
                                         executable=self.solver_path)
+        self.solver.options['tol'] = 1.0e-15
 
     def solve(self):
         self.solver.solve(self.model)
