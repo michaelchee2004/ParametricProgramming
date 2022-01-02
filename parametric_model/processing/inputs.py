@@ -38,16 +38,14 @@ def read_QmAb(file_name: Path) -> np.ndarray:
 def read_QmA_theta_b(file_name: Path) -> np.ndarray:
     data_file_path = DATA_DIR / file_name
     if data_file_path.is_file():
-        data = np.loadtxt(data_file_path)
-        theta_size = data[0, 0]
+        data = np.loadtxt(data_file_path, delimiter=',')
+        theta_size = int(data[0, 0])
         x_size = get_cols(data) - theta_size - 1
-        Q = data[1:1+x_size, :-theta_size-1]
-        m = data[1+x_size, :-theta_size-1]
-        A = data[1+x_size+1:, :-theta_size-1]
-        theta = data[1+x_size+1:, 
-                     x_size:x_size+theta_size]
-        b = data[1+x_size+1:, -1].flatten()
-        return Q, m, A, theta, b
+        Q = data[1:1+x_size+theta_size, :-1]
+        m = data[1+x_size+theta_size, :-1]
+        A = data[1+x_size+theta_size+1:, :-1]
+        b = data[1+x_size+theta_size+1:, -1].flatten()
+        return Q, m, A, b, theta_size
     raise OSError('Did not find file at path: {data_file_path}')
 
 

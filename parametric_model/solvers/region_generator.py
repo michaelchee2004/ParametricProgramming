@@ -2,7 +2,7 @@ import numpy as np
 
 from parametric_model.processing.inputs import check_duplicates, remove_duplicates, get_rows, get_cols
 from parametric_model.solvers.region_solver import RegionSolver
-
+from parametric_model.config.core import config
 
 
 class ParametricSolver:
@@ -11,7 +11,7 @@ class ParametricSolver:
     - 0: uns
     """
 
-    def __init__(self, A, b, Q, m, theta_size):
+    def __init__(self, A, b, Q, m, theta_size, max_iter=config.regiongen_config.max_iter_default):
         self.system = {
             'A': A,
             'b': b,
@@ -21,8 +21,10 @@ class ParametricSolver:
         }
         self.x_size = get_cols(self.system['A']) - theta_size
         self.col_size = get_rows(self.system['A'])
+        self.max_iter = max_iter
 
         self.regions = {}
+        self.create_region(None, None, None, None, None, None, None, None, 0)
 
     def create_region(self, soln_A, soln_b, firm_bound_A, firm_bound_b, added_bound_A, added_bound_b, 
                       flippable_bound_A, flippable_bound_b, solved_status):
@@ -35,7 +37,7 @@ class ParametricSolver:
             'added_bound_b': added_bound_b,
             'flippable_bound_A': flippable_bound_A,
             'flippable_bound_b': flippable_bound_b,
-            'solved_status': solved_status
+            'solve_status': solved_status
         }
         self.regions[self.new_index()] = region_def
 
@@ -82,10 +84,11 @@ class ParametricSolver:
                 None,
                 None,
                 np.concatenate((added_A.copy(), next_added_A.copy()), axis=0),
-                np.concatenate((added_b.copy(), next_added_b.copy()-1e-7)),
+                np.concatenate((added_b.copy(), next_added_b.copy() -
+                                config.regiongen_config.newregion_tol)),
                 None,
                 None,
-                False)
+                0)
             next_added_A[-1, :] = next_added_A[-1, :] * -1.0
             next_added_b[-1] = next_added_b[-1] * -1.0
 
@@ -101,6 +104,8 @@ class ParametricSolver:
         )
         self.regions[region_index]['flippable_bound_A'] = None
         self.regions[region_index]['flippable_bound_b'] = None
+
+        self.regions[region_index]['solve_status'] = 3
 
     def solve_region_problem(self, region_index):
         """
@@ -143,6 +148,8 @@ class ParametricSolver:
             region_index,
             region_problem.boundary_slope,
             region_problem.boundary_constant)
+
+        self.regions[region_index]['solve_status'] = 1
 
     def new_index(self):
         try:
@@ -282,65 +289,79 @@ class ParametricSolver:
                 self_duplicates,
                 firm_duplicates,
                 added_duplicates))).tolist()
-        self.regions[region_index]['flippable_bound_A'] = np.delete(flippable_concat, index_to_delete, axis=0)[:, :-1]
-        self.regions[region_index]['flippable_bound_b'] = np.delete(flippable_concat, index_to_delete, axis=0)[:, -1]
+        self.regions[region_index]['flippable_bound_A'] = np.delete(
+            flippable_concat, 
+            index_to_delete, 
+            axis=0
+        )[:, :-1]
+        self.regions[region_index]['flippable_bound_b'] = np.delete(
+            flippable_concat, 
+            index_to_delete, 
+            axis=0
+        )[:, -1]
+
+        self.regions[region_index]['solve_status'] = 2
+
+    def loop_region(self, region_index):
+        self.solve_region_problem(region_index)
+        self.reduce_region_bounds(region_index)
+        self.gen_new_regions(region_index)
+
+    def solve(self):
+        for i in range(self.max_iter):
+            for r in range(len(self.regions)):
+                if self.regions[r]['solve_status'] == 0:
+                    self.loop_region(r)
+            
+            if np.all(
+                np.array(
+                    [self.regions[i]['solve_status'] for i 
+                    in range(len(self.regions))]) != 0) == True:
+                break
 
 
 #########################################################################################
-A = np.array(
-    [[1.0, .0, -3.16515, -3.7546],
-     [-1.0, .0, 3.16515, 3.7546],
-     [-0.0609, .0, -0.17355, 0.2717],
-     [-0.0064, .0, -0.06585, -0.4714],
-     [.0, 1.0, -1.81960, 3.2841],
-     [.0, -1.0, 1.81960, -3.2841],
-     [.0, .0, -1.0, .0],
-     [.0, .0, 1.0, .0],
-     [.0, .0, .0, -1.0],
-     [.0, .0, .0, 1.0]]
-)
+# A = np.array(
+#     [[1.0, .0, -3.16515, -3.7546],
+#      [-1.0, .0, 3.16515, 3.7546],
+#      [-0.0609, .0, -0.17355, 0.2717],
+#      [-0.0064, .0, -0.06585, -0.4714],
+#      [.0, 1.0, -1.81960, 3.2841],
+#      [.0, -1.0, 1.81960, -3.2841],
+#      [.0, .0, -1.0, .0],
+#      [.0, .0, 1.0, .0],
+#      [.0, .0, .0, -1.0],
+#      [.0, .0, .0, 1.0]]
+# )
 
-b = np.array(
-    [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, .0, 1.0, .0, 1.0]
-)
+# b = np.array(
+#     [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, .0, 1.0, .0, 1.0]
+# )
 
-m = np.array(
-    [.0, .0, .0, .0]
-)
+# m = np.array(
+#     [.0, .0, .0, .0]
+# )
 
-Q = np.array(
-    [[0.0098*2, 0.0063, .0, .0],
-     [0.0063, 0.00995*2, .0, .0],
-     [.0, .0, .0, .0],
-     [.0, .0, .0, .0]]
-)
+# Q = np.array(
+#     [[0.0098*2, 0.0063, .0, .0],
+#      [0.0063, 0.00995*2, .0, .0],
+#      [.0, .0, .0, .0],
+#      [.0, .0, .0, .0]]
+# )
 
-theta_size = 2
+# theta_size = 2
 
-mp = ParametricSolver(A, b, Q, m, theta_size)
-mp.create_region(None, None, None, None, None, None, None, None, False)
-mp.solve_region_problem(0)
-mp.reduce_region_bounds(0)
-mp.gen_new_regions(0)
+
+# mp = ParametricSolver(A, b, Q, m, theta_size)
+# mp.solve()
+# # mp.create_region(None, None, None, None, None, None, None, None, False)
+# # mp.solve_region_problem(0)
+# # mp.reduce_region_bounds(0)
+# # mp.gen_new_regions(0)
+# # mp.solve_region_problem(1)
+# # mp.reduce_region_bounds(1)
+# # mp.gen_new_regions(1)
+# # mp.solve_region_problem(2)
+# # mp.reduce_region_bounds(2)
+# # mp.gen_new_regions(2)
 # print(mp.regions)
-mp.solve_region_problem(1)
-mp.reduce_region_bounds(1)
-mp.gen_new_regions(1)
-# print(mp.regions)
-mp.solve_region_problem(2)
-mp.reduce_region_bounds(2)
-mp.gen_new_regions(2)
-# print(mp.regions)
-mp.solve_region_problem(3)
-mp.reduce_region_bounds(3)
-mp.gen_new_regions(3)
-# # print(mp.regions)
-mp.solve_region_problem(4)
-mp.reduce_region_bounds(4)
-mp.gen_new_regions(4)
-# mp.solve_region_problem(5)
-# mp.reduce_region_bounds(5)
-# mp.gen_new_regions(5)
-print(mp.regions)
-
-

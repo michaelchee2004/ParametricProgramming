@@ -1,6 +1,5 @@
 import numpy as np
 
-from parametric_model.config.core import config
 from parametric_model.processing.redundancy_checker import RedundancyChecker
 
 
@@ -12,5 +11,5 @@ def test_redundancy_checker(rc_test_data):
                        np.array([[-0.13793103,  4.20689655],
                                  [1.,           0.        ]]), 
                        rtol=0.0, 
-                       atol=config.other_config.allclose_tol)
+                       atol=1e-6)
 

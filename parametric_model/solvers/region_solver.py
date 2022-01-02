@@ -81,8 +81,6 @@ class RegionSolver:
         x_problem.solve()
         self.x = x_problem.soln
         self.duals = x_problem.duals
-        # print('duals')
-        # print(self.duals)
         self.active_const = x_problem.active_const
         self.duals[np.logical_not(self.active_const).tolist()] = .0
 
@@ -222,46 +220,46 @@ class RegionSolver:
 
 
 ########################################################################################
-A = np.array(
-    [[1.0, .0, -3.16515, -3.7546],
-     [-1.0, .0, 3.16515, 3.7546], # problematic
-     [-0.0609, .0, -0.17355, 0.2717],
-     [-0.0064, .0, -0.06585, -0.4714],
-     [.0, 1.0, -1.81960, 3.2841], # problematic
-     [.0, -1.0, 1.81960, -3.2841],
-     [.0, .0, -1.0, .0],
-     [.0, .0, 1.,   .0],
-     [.0, .0, .0, -1.0],
-     [.0, .0, .0, 1.0],
-     # additional
-     [.0, .0, -3.16515   , -3.7546    ],
-     [.0, .0,  2.82163241, -2.09545779],
-     [.0, .0, 0.07350042,  0.05290032]]
-)
+# A = np.array(
+#     [[1.0, .0, -3.16515, -3.7546],
+#      [-1.0, .0, 3.16515, 3.7546], # problematic
+#      [-0.0609, .0, -0.17355, 0.2717],
+#      [-0.0064, .0, -0.06585, -0.4714],
+#      [.0, 1.0, -1.81960, 3.2841], # problematic
+#      [.0, -1.0, 1.81960, -3.2841],
+#      [.0, .0, -1.0, .0],
+#      [.0, .0, 1.,   .0],
+#      [.0, .0, .0, -1.0],
+#      [.0, .0, .0, 1.0],
+#      # additional
+#      [.0, .0, -3.16515   , -3.7546    ],
+#      [.0, .0,  2.82163241, -2.09545779],
+#      [.0, .0, 0.07350042,  0.05290032]]
+# )
 
-b = np.array(
-    [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, .0, 1., .0, 1., 
-    # additional 
-     -3.582575,  0.04398198,  0.06335022]
-)
+# b = np.array(
+#     [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, .0, 1., .0, 1., 
+#     # additional 
+#      -3.582575,  0.04398198,  0.063350]
+# )
 
-m = np.array(
-    [.0, .0, .0, .0]
-)
+# m = np.array(
+#     [.0, .0, .0, .0]
+# )
 
-Q = np.array(
-    [[0.0098*2, 0.0063, .0, .0],
-     [0.0063, 0.00995*2, .0, .0],
-     [.0, .0, .0, .0],
-     [.0, .0, .0, .0]]
-)
+# Q = np.array(
+#     [[0.0098*2, 0.0063, .0, .0],
+#      [0.0063, 0.00995*2, .0, .0],
+#      [.0, .0, .0, .0],
+#      [.0, .0, .0, .0]]
+# )
 
-theta_count = 2
+# theta_count = 2
 
 
-mp = RegionSolver(A, b, Q, m, theta_count)
-mp.solve()
-print('mp.boundary_slope')
-print(mp.boundary_slope)
-print('mp.boundary_constant')
-print(mp.boundary_constant)
+# mp = RegionSolver(A, b, Q, m, theta_count)
+# mp.solve()
+# print('mp.boundary_slope')
+# print(mp.boundary_slope)
+# print('mp.boundary_constant')
+# print(mp.boundary_constant)

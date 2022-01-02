@@ -3,11 +3,13 @@ app_name: parametric_model
 
 # inputs
 rc_test_data_file: rc_test_data.csv
+qp_region_test_data_file: qp_region_test_data.csv
+mp_test_data_file: mp_test_data.csv
 # this is the most important, to remove redundant rows from M if max of the row
 # is smaller than this value
 # Too small, not enough boundaries are removed
 # Too big, too many boundaries are removed
-allclose_tol: 1e-10
+allclose_tol: 1e-9
 
 # solver_path: 'C:\\w64\glpsol'
 # solver_setting: 'glpk'
@@ -15,11 +17,16 @@ solver_path: 'C:\\cygwin64\\home\\user1\\Ipopt-3.12.12\\bin\\ipopt'
 solver_setting: 'ipopt'
 
 # redundancy_checker
-relax_tol: 1e-6
-zero_tol: 1e-6
+relax_tol: 1e-9
+zero_tol: 1e-9
 
-# quadratic_solver. Constraint with slack smaller than this is considered active
-# Too small, then active constraints are missed
-# Too big, then too many active constraints 
-feas_tol: 1e-2
+# quadratic_solver
+# constraints with dual larger than this is considered active
+# Too big, then active constraints are missed
+# Too small, then too many active constraints 
+activedual_tol: 1e-9
+# opt_tol: 1e-8
 
+# region generator
+newregion_tol: 1e-6 # 1000 times the active constraint tolerance
+max_iter_default: 100

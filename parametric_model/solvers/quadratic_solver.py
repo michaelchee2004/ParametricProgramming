@@ -10,6 +10,7 @@ class GenericSolver:
     def __init__(self, A, b, Q, m, 
                  solver_path=config.solver_config.solver_path,
                  solver_setting=config.solver_config.solver_setting,
+                 activedual_tol=config.solver_config.activedual_tol,
                  tee=False):
         
         self.A = A
@@ -19,6 +20,7 @@ class GenericSolver:
         # solver
         self.solver_path = solver_path
         self.solver_setting = solver_setting
+        self.activedual_tol = activedual_tol
         self.tee = tee
         # get no of var and constraints
         self.x_size = get_cols(self.A)
@@ -67,7 +69,8 @@ class GenericSolver:
         self.solver = pmo.SolverFactory(self.solver_setting, 
                                         tee=self.tee,
                                         executable=self.solver_path)
-        self.solver.options['tol'] = 1.0e-15
+
+        self.solver.options['tol'] = 1e-15
 
     def solve(self):
         self.solver.solve(self.model)
@@ -80,8 +83,8 @@ class GenericSolver:
         for c in range(self.c_size):
             self.duals[c] = -self.model.dual[self.model.constraints[c+1]]
         
-        self.slacks = np.empty([self.c_size])
-        for c in range(self.c_size):
-            self.slacks[c] = self.model.constraints[c+1].uslack()
+        # self.slacks = np.empty([self.c_size])
+        # for c in range(self.c_size):
+        #     self.slacks[c] = self.model.constraints[c+1].uslack()
 
-        self.active_const = self.slacks <= config.solver_config.feas_tol
+        self.active_const = self.duals >= self.activedual_tol

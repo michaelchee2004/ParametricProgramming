@@ -1,8 +1,9 @@
 import collections
+
 import pytest
 
 from parametric_model.config.core import config
-from parametric_model.processing.inputs import read_Ab
+from parametric_model.processing.inputs import read_Ab, read_QmA_theta_b
 
 
 @pytest.fixture()
@@ -14,8 +15,17 @@ def rc_test_data():
 
 
 @pytest.fixture()
-def qp_test_data():
-    Q, m, A, b = read_Ab(config.app_config.rc_test_data_file)
-    QmAb_collection = collections.namedtuple('QmAb', ['Q', 'm', 'A', 'b'])
-    QmAb = QmAb_collection(Q, m, A, b)
-    return QmAb
+def qp_region_test_data():
+    Q, m, A, b, theta_size = read_QmA_theta_b(config.app_config.qp_region_test_data_file)
+    QmAb_theta_collection = collections.namedtuple('QmA_theta_b', ['Q', 'm', 'A', 'b', 'theta_size'])
+    QmAb_theta = QmAb_theta_collection(Q, m, A, b, theta_size)
+    return QmAb_theta
+
+
+@pytest.fixture()
+def mp_test_data():
+    Q, m, A, b, theta_size = read_QmA_theta_b(config.app_config.mp_test_data_file)
+    QmAb_theta_collection = collections.namedtuple(
+        'QmA_theta_b', ['Q', 'm', 'A', 'b', 'theta_size'])
+    QmAb_theta = QmAb_theta_collection(Q, m, A, b, theta_size)
+    return QmAb_theta

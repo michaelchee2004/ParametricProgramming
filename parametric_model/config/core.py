@@ -12,17 +12,24 @@ CONFIG_FILE_PATH = MODEL_ROOT / 'config.yml'
 class AppConfig(BaseModel):
     app_name: str
     rc_test_data_file: str
+    qp_region_test_data_file: str
+    mp_test_data_file: str
 
 
 class SolverConfig(BaseModel):
     solver_path: str
     solver_setting: str
-    feas_tol: float
+    activedual_tol: float
 
 
 class RedundancyCheckerConfig(BaseModel):
     relax_tol: float
     zero_tol: float
+
+
+class RegionGenConfig(BaseModel):
+    newregion_tol: float
+    max_iter_default: int
 
 
 class OtherConfig(BaseModel):
@@ -33,6 +40,7 @@ class Config(BaseModel):
     app_config: AppConfig
     solver_config: SolverConfig
     redundancy_checker_config: RedundancyCheckerConfig
+    regiongen_config: RegionGenConfig
     other_config: OtherConfig
 
 
@@ -49,6 +57,7 @@ def validate_config(parsed_config):
         app_config=AppConfig(**parsed_config.data),
         solver_config=SolverConfig(**parsed_config.data),
         redundancy_checker_config=RedundancyCheckerConfig(**parsed_config.data),
+        regiongen_config = RegionGenConfig(**parsed_config.data),
         other_config=OtherConfig(**parsed_config.data))
     return _config
 
