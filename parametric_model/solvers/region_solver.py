@@ -1,20 +1,60 @@
 import numpy as np
 from numpy.lib.function_base import delete
-import pyomo.environ as pmo
 
 from parametric_model.config.core import config
-from parametric_model.processing.inputs import get_rows, get_cols, vector_to_dict, matrix_to_dict, get_zeros_rows_index
+from parametric_model.processing.inputs import get_rows, get_cols, get_zeros_rows_index
 from parametric_model.solvers.quadratic_solver import GenericSolver
 from parametric_model.processing.redundancy_checker import RedundancyChecker
 
 
 class RegionSolver:
-    """
-    Returns equations representing x, lambda and boundaries of a math problem in terms of theta.
-    self.soln_slope
-    self.soln_constant
-    self.boundary_slope
-    self.boundary_constant
+    """Class for solving a region in multi-parametric QP.
+
+    The problem is posed as
+    min(XT)QX + mX
+    s.t.
+    Ax <= b
+    where
+    X: a vector of optimised variables x and varying parameter theta, with theta always
+    listed after x
+    XT: transposed X
+    Q: coefficients for qudratic terms
+    m: coefficients for linear terms
+    A: LHS coefficients in constraints list
+    b: RHS constants in constraints list
+
+    To use this class, simply create object and solve:
+        RegionSolver(A, b, Q, m, theta_size).solve()
+
+    Attributes:
+        A (ndarray): 1D array, LHS of constraint matrix
+        b (ndarray): 1D array, RHS of constraint matrix
+        Q (ndarray): 2D array, coefficients of quadratic terms in objective
+        m (ndarray): 1D array, coefficients of linear terms inf objective
+        theta_size (int): number of varying parameters theta
+        x_size (int): number of optimised variables x
+        var_size (int): total number of optimised variables x and varying parameters 
+            theta
+        c_size (int): number of rows of constraints
+        theta (ndarray): 1D array, a starting solution of theta
+        x_problem_A (ndarray): 2D array, represents LHS of constraint matrix as we pose 
+            problem solving x under a starting solution of theta
+        x_problem_b (ndarray): 1D array, represents RHS of constraint matrix as we pose 
+            problem solving x under a starting solution of theta
+        x_problem_theta_matrix (ndarray): 2D array, the theta terms in A 'left out' when 
+            solving for x
+        x (ndarray): 1D array, solution of x under a starting solution of theta
+        duals (ndarray): 1D array, duals from solving x under a starting solution of theta
+        active_const (list of bool): active constraints when solving x
+        M (ndarray): 2D array, derivative matrix of the lagrangian w.r.t. x and duals
+        M_kept_rows (ndarray): 1D array, non-zero rows of M
+        N (ndarray): 2D array, derivative of the lagrangian w.r.t. theta
+        MN (ndarray): 1D array, soltuion of M^-1 * N
+        reduced_duals (ndarray): 1D array, duals of active constraints only
+        soln_slope (ndarray): slope of the solution of x
+        soln_constant (ndarray): constant of the solution of x
+        boundary_slope (ndarray): slope of the region boundaries 
+        boundary_constant (ndarray): constant of the region boundaries
     """
 
     def __init__(self, A, b, Q, m, theta_size):
@@ -40,6 +80,7 @@ class RegionSolver:
 
         # returned from _get_MN
         self.M = None
+        self.M_kept_rows = None
         self.N = None
         self.MN = None
         self.reduced_duals = None
@@ -53,14 +94,17 @@ class RegionSolver:
         self.boundary_constant = None
 
     def _solve_theta(self):
-        theta_only_rows = get_zeros_rows_index(self.A[:, :self.x_size])
-        problem_b = self.b.copy()
-        problem_b[theta_only_rows] = problem_b[theta_only_rows]
-        _theta_problem = GenericSolver(self.A, problem_b, self.Q, self.m)
+        """Generate a starting, feasible value of theta."""
+        
+        _theta_problem = GenericSolver(self.A, self.b, self.Q, self.m)
         _theta_problem.solve()
         self.theta = _theta_problem.soln[-self.theta_size:]
 
     def _solve_x(self):
+        """Generate a optimal solution of x based on a starting value of theta.
+        
+        The method also provides other useful outputs from solving x, such as duals.
+        """
         # define A without theta, and ignore constraints with only theta terms
         self.x_problem_A = self.A[:, :-self.theta_size]
         # define b ignoring constraints with only theta terms
@@ -69,82 +113,88 @@ class RegionSolver:
         self.x_problem_m = self.m[:self.x_size]
 
         # delete constraints with only theta terms
-        delete_rows = get_zeros_rows_index(self.x_problem_A)
-        self.x_problem_A = np.delete(self.x_problem_A, delete_rows, axis=0)
-        self.x_problem_b = np.delete(self.x_problem_b, delete_rows)
-        self.x_problem_theta_matrix = np.delete(self.A[:, -self.theta_size:], delete_rows, axis=0)
+        _delete_rows = get_zeros_rows_index(self.x_problem_A)
+        self.x_problem_A = np.delete(self.x_problem_A, _delete_rows, axis=0)
+        self.x_problem_b = np.delete(self.x_problem_b, _delete_rows)
+        self.x_problem_theta_matrix = np.delete(
+            self.A[:, -self.theta_size:], _delete_rows, axis=0)
         # this is b without the subtraction of theta
-        self.x_problem_b_original = np.delete(self.b, delete_rows)
+        self.x_problem_b_original = np.delete(self.b, _delete_rows)
 
         # solve for x, duals
-        x_problem = GenericSolver(self.x_problem_A, self.x_problem_b, self.x_problem_Q, self.x_problem_m)
-        x_problem.solve()
-        self.x = x_problem.soln
-        self.duals = x_problem.duals
-        self.active_const = x_problem.active_const
+        _x_problem = GenericSolver(self.x_problem_A, self.x_problem_b, self.x_problem_Q, self.x_problem_m)
+        _x_problem.solve()
+        self.x = _x_problem.soln
+        self.duals = _x_problem.duals
+        self.active_const = _x_problem.active_const
         self.duals[np.logical_not(self.active_const).tolist()] = .0
 
     def _get_MN(self):
+        """Compute attributes 'M', 'N' and 'MN'."""
+
         self.M_len = self.x_size + get_rows(self.x_problem_A)
         self.M = np.zeros([self.M_len, self.M_len])
         # note it is impossible for the previous row reduction to make Q unfit for top left,
         # because the first rows include the objective function so are impossible to be removed
-        M_top_left_input = self.Q[:self.x_size, :self.x_size]
-#         for i in range(M_top_left_input.shape[0]):
-#             M_top_left_input[i, i] = M_top_left_input[i, i]/2.0
-        self.M[:self.x_size, :self.x_size] = M_top_left_input
+        _M_top_left_input = self.Q[:self.x_size, :self.x_size]
+        self.M[:self.x_size, :self.x_size] = _M_top_left_input
         self.M[:self.x_size, self.x_size:] = self.x_problem_A.T
         self.M[self.x_size:, :self.x_size] = np.multiply(self.x_problem_A.T, self.duals).T
 
         # if whole row is zero, multiplier is zero so delete row
-        self.delete_rows = get_zeros_rows_index(self.M)
-        self.M = np.delete(self.M, self.delete_rows, axis=0)
-        self.M = np.delete(self.M, self.delete_rows, axis=1)
-        self.kept_rows = np.delete(range(self.M_len), self.delete_rows)
+        _delete_rows = get_zeros_rows_index(self.M)
+        self.M = np.delete(self.M, _delete_rows, axis=0)
+        self.M = np.delete(self.M, _delete_rows, axis=1)
+        self.M_kept_rows = np.delete(range(self.M_len), _delete_rows)
 
         # M has (x_size + c_size) rows.
         # For matrices theta_matrix and duals, they only have c_size rows.
         # Here we want to delete constraints that are redundant in theta_matrix and duals, not M.
         # So go back by x_size to delete rows for theta_matrix and duals.
-        delete_rows_constraints_only = self.delete_rows - \
-            np.ones(len(self.delete_rows)) * self.x_size
-        delete_rows_constraints_only = delete_rows_constraints_only.astype('int')
+        _delete_rows_constraints_only = _delete_rows - \
+            np.ones(len(_delete_rows)) * self.x_size
+        delete_rows_constraints_only = _delete_rows_constraints_only.astype('int')
         # delete redundant rows from theta_matrix, duals and N also to avoid singular matrix
-        reduced_theta_matrix = np.delete(self.x_problem_theta_matrix, delete_rows_constraints_only, axis=0)
+        _reduced_theta_matrix = np.delete(self.x_problem_theta_matrix, delete_rows_constraints_only, axis=0)
         self.reduced_duals = np.delete(self.duals, delete_rows_constraints_only)
 
         self.N = np.zeros([np.shape(self.M)[0], self.theta_size])
-        self.N[self.x_size:] = np.multiply(reduced_theta_matrix.T, self.reduced_duals).T
+        self.N[self.x_size:] = np.multiply(_reduced_theta_matrix.T, self.reduced_duals).T
 
         self.MN = np.linalg.solve(self.M, self.N)
 
     def _get_soln_params(self):
+        """Compute attributes 'soln_slope' and 'soln_constant'. """
+
         self.soln_slope = np.zeros((self.M_len, self.theta_size))
-        self.soln_slope[self.kept_rows] = -self.MN
+        self.soln_slope[self.M_kept_rows] = -self.MN
 
         self.soln_constant = np.zeros(self.M_len)
-        self.soln_constant[self.kept_rows] = np.dot(-self.MN, -self.theta) \
+        self.soln_constant[self.M_kept_rows] = np.dot(-self.MN, -self.theta) \
                                              + np.concatenate((self.x, self.reduced_duals))
 
     def _set_boundaries(self):
-        # Boundaries come from three places:
-        # - subbing theta into the constraints
-        # - slope calculated for duals
-        # - theta-only constraints
-        # 
-        # For subbing theta into constraints.
-        # substitute x = G * theta + H we got from previous step into Ax <= b
-        # Means AG * theta + AH <= b
-        # A: x_problem_A, remove active constraints
-        # b: x_problem_b, remove active constraints
-        # G: soln_slope, for x (so remove rows for duals)
-        # H: soln_constant, for x (so remove rows for duals)
-        #
-        # Then need to add back the theta theta matrix into the constraints to 
-        # get back the full constraint with theta. We can use x_problem_theta_matrix
-        # 
-        # Note for first two, both needs to remove zeros rows. They can happen in MN is 0.
-
+        """Return boundaries of the region.
+        
+        Boundaries come from three places:
+        - subbing theta into the constraints
+        - slope calculated for duals
+        - theta-only constraints
+         
+        For subbing theta into constraints.
+        substitute x = G * theta + H we got from previous step into Ax <= b
+        Means AG * theta + AH <= b
+        A: x_problem_A, remove active constraints
+        b: x_problem_b, remove active constraints
+        G: soln_slope, for x (so remove rows for duals)
+        H: soln_constant, for x (so remove rows for duals)
+        
+        Then need to add back the theta theta matrix into the constraints to 
+        get back the full constraint with theta. We can use x_problem_theta_matrix
+        
+        Note for first two, both needs have rows of zeros removed. They can happen in MN is 0.        
+        """
+        
         # Deal with subbing theta into constants first
         not_active_const_flag = np.logical_not(self.active_const)
         sub_A = self.x_problem_A[not_active_const_flag]
@@ -163,8 +213,8 @@ class RegionSolver:
 
         # Now deal with dual boundaries
         # We need to flip dual boundaries A. 
-        # From previous step, lambda  = slope * theta + constant
-        # For lambda to remain positive in the region, we need lambda = slope * theta + constant >= 0
+        # From previous step, dual  = slope * theta + constant
+        # For duals to remain positive in the region, we need dual = slope * theta + constant >= 0
         # Rearrange to get -slope * theta <= constant
         dual_boundaries_A = self.soln_slope[self.x_size:, :] * -1.0
         dual_boundaries_b = self.soln_constant[self.x_size:]
@@ -212,6 +262,8 @@ class RegionSolver:
         self.boundary_slope, self.boundary_constant = reduction_problem.remove_redundancy()
 
     def solve(self):
+        """Solve the region by running methods in order."""
+        
         self._solve_theta()
         self._solve_x()
         self._get_MN()

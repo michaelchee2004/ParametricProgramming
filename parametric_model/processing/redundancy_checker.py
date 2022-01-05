@@ -8,23 +8,24 @@ from parametric_model.processing.inputs import get_rows, get_cols, matrix_to_dic
 
 class RedundancyChecker():
     """
-    A class which remove redundant rows for a constraint system Ax <= b.
+    A class for removing redundant rows for a constraint system Ax <= b.
 
     Attributes:
-        A: a ndarray which is LHS of Ax <= b
-        b: a ndarray which is RHS of Sx <= b
-        model: pyomo model object for detecting redundancy
-        solver_path: location of executable for solver
-        solver_setting: which solver to use, a parameter for pyomo
-        solver: pyomo solver object for solving model
-        relax_tol: a float to relax a constraint being checked for redundancy
-        zero_tol: a float, value higher than this is identified as higher than zero
-        x_size: int, no of variables in A
-        c_size: int, no of constraints in A
-        slack: a list of how much slack is in a constraint being checked for redundancy
-        redundancy: a boolean list marking a 1 for each redundant constraint
-        reduced_A: A with redundant rows removed
-        reduced_b: b with redundant rows removed   
+        A (ndarray): a 2D which is LHS of Ax <= b
+        b (ndarray): a 1D ndarray which is RHS of Sx <= b
+        model (pyomo model object): pyomo model object for detecting redundancy
+        solver_path (str): location of executable for solver
+        solver_setting (str): which solver to use, a parameter for pyomo
+        solver (pyomo solver object): pyomo solver object for solving model
+        relax_tol (float, optional): a float to relax a constraint being checked for redundancy.
+            Default provided in config.yml
+        zero_tol (float, optional): a float, value higher than this is identified as higher than zero.
+            Default provided in config.yml
+        x_size (int): int, no of variables in A
+        c_size (int): int, no of constraints in A
+        redundancy (list of int): a boolean list indicating 1 for each redundant constraint
+        reduced_A (ndarray): 2D array, A with redundant rows removed
+        reduced_b (ndarray): 1D array, b with redundant rows removed   
     """
 
     def __init__(self, A, b, 
@@ -32,20 +33,9 @@ class RedundancyChecker():
                  solver=config.solver_config.solver_setting,
                  relax_tol=config.redundancy_checker_config.relax_tol, 
                  zero_tol=config.redundancy_checker_config.zero_tol):
+        """Inits class and create pyomo model object ready to be run.
         """
-        Inits class and create opt model ready to be run.
 
-        Args:
-            A: attribute, see class docstring
-            b: attribute, see class docstring
-            solver_path: attribute, see class docstring
-            solver_setting: attribute, see class docstring
-            relax_tol: attribute, see class docstring
-            zero_tol: attribute, see class docstring
-
-        Returns:
-            None
-        """
         # defining Ax <= b
         self.A = A
         self.b = b
@@ -70,8 +60,7 @@ class RedundancyChecker():
         self._create_model()
 
     def _create_model(self):
-        """
-        Create model object so that it can called when needed.
+        """Create pyomo model and solver objects.
         
         Args:
             None
@@ -94,17 +83,15 @@ class RedundancyChecker():
             self.model.constraints.add(sum(self.model.A[c, i] * self.model.x[i]
                                            for i in self.model.n) <= self.model.b[c])
         self.solver = pmo.SolverFactory(self.solver_setting, executable=self.solver_path)
-        self.solver.options['tol'] = 1e-12
 
-    def remove_redundancy(self) -> None:
+    def remove_redundancy(self):
         """
         Remove redundant rows from Ax <= b.
 
         Args:
             None
         Returns:
-            reduced_A: A with redundant rows removed
-            reduced_b: A with redundant rows removed
+            None
         """  
         # for each constraint, delete any old obj, set new obj as Ax of chosen constraint
         # and maximise it.

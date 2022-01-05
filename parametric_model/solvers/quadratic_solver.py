@@ -6,12 +6,45 @@ from parametric_model.processing.inputs import get_rows, get_cols, vector_to_dic
 
 
 class GenericSolver:
+    """A class for solving QPs.
+
+    The problem is posed as 
+    min (XT)QX + mX
+    s.t. 
+    Ax <= b
+    where
+    X: a vector of optimised variables x
+    XT: transposed X
+    Q: coefficients for qudratic terms
+    m: coefficients for linear terms
+    A: LHS coefficients in constraints list
+    b: RHS constants in constraints list
+
+    Attributes:
+        A (ndarray): 1D array, LHS of constraint matrix
+        b (ndarray): 1D array, RHS of constraint matrix
+        Q (ndarray): 2D array, coefficients of quadratic terms in objective
+        m (ndarray): 1D array, coefficients of linear terms inf objective
+        solver_path (str): full path of solver executable. Default provided in config.yml
+        solver_setting (str): solver. See admissable solver for pyomo. 
+            Default provided in config.yml
+        activedual_tol (float): duals with values larger than this tolerance is considered 
+            active. See attribute 'active_const'
+        tee (bool): set to True for pyomo to print log. Defaults to False
+        x_size (int): number of optimised variables x
+        c_size (int): number of rows of constraints
+        soln (ndarray): optimisation solution of x
+        duals (ndarray): duals of constraints
+        active_const (list of bool): bool indicating whether constraints are active, based on 
+            attribute 'activedual_tol'
+    """
 
     def __init__(self, A, b, Q, m, 
                  solver_path=config.solver_config.solver_path,
                  solver_setting=config.solver_config.solver_setting,
                  activedual_tol=config.solver_config.activedual_tol,
                  tee=False):
+        """Initialise object by taking in inputs and creating pyomo model object."""
         
         self.A = A
         self.b = b
@@ -28,12 +61,14 @@ class GenericSolver:
         # outputs
         self.soln = None
         self.duals = None
-        self.slacks = None
+        # self.slacks = None
         self.active_const = None
 
         self._create_model()
 
     def _create_model(self):        
+        """Create pyomo model object."""
+
         _A_init = matrix_to_dict(self.A)
         _b_init = vector_to_dict(self.b)
         _Q_init = matrix_to_dict(self.Q)
@@ -73,6 +108,11 @@ class GenericSolver:
         self.solver.options['tol'] = 1e-15
 
     def solve(self):
+        """Solve optimisation problem and save results.
+
+        Results saved include attribute 'soln', 'duals' and 'active_const'.
+        """
+
         self.solver.solve(self.model)
 
         self.soln = np.empty([self.x_size])

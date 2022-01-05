@@ -6,12 +6,80 @@ from parametric_model.config.core import config
 
 
 class ParametricSolver:
-    """
-    Solve_status:
-    - 0: uns
+    """A solver class for multi-parametric LP/QP problems.
+   
+    The problem is posed as 
+    min (XT)QX + mX
+    s.t. 
+    Ax <= b
+    where
+    X: a vector of optimised variables x and varying parameter theta, with theta always 
+        listed after x
+    XT: transposed X
+    Q: coefficients for qudratic terms
+    m: coefficients for linear terms
+    A: LHS coefficients in constraints list
+    b: RHS constants in constraints list
+
+    Attributes:
+        system (dict): a dict representing the original problem (Q, b, Q, m, theta_size). 
+        x_size: (int): number of variables x in problem
+        col_size (int): total number of x and theta
+        max_iter (int): setting limiting how many times the regions list is looked through to find 
+            unsolved regions
+        regions (dict): a dict storing results for all the regions
+
+    Notes:
+        In 'system' attribute, distinction between coefficients for x and for theta are made in the 
+        folllowing way:
+            'theta_size' is the number of varying parameters. 
+            In 1D array 'm', the last theta_size elements are of theta;
+            in 2D array 'Q', the last theta_size rows and columns are of theta;
+            in 2D array 'A', the last theta_size columns are of theta.     
+
+        Within 'regions' dict attribute, each region is defined by a dict with the following keys:
+            'soln_A'/'soln_b': slope and constant for the parametrised optimal solution of x and 
+                constraint duals
+            'firm_bound_A'/'firm_bound_b: slope and constant for region boundaries which appear 
+                in the original problem
+            'added_bound_A'/'added_bound_b': region boundaries which do not appear in original problem
+            'flippable_bound_A'/'flippable_bound_b': same as added_bound_A/b, but for boundaries yet 
+                to be used to generate new regions (so can be flipped to create new region)
+            solve_status: 0 = region has not been solved; 1 = region has been solved; 2 = redundant 
+                region boundaries have been removed; 3 = region boundaries have been used to generate 
+                new regions 
+
     """
 
     def __init__(self, A, b, Q, m, theta_size, max_iter=config.regiongen_config.max_iter_default):
+        """ Initialise object by taking in problem inputs and creating an initial region.
+
+        The problem is posed as 
+        min (XT)QX + mX
+        s.t. 
+        Ax <= b
+        where
+        X: a vector of optimised variables x and varying parameter theta, with theta always listed 
+        after x
+        XT: transposed X
+        Q: coefficients for qudratic terms
+        m: coefficients for linear terms
+        A: LHS coefficients in constraints list
+        b: RHS constants in constraints list
+
+        Args:
+            A (ndarray): 2D array, LHS of constraint system
+            b (ndarray): 1D array, RHS of constraint system
+            Q (ndarray): 2D array, coefficients for quadratic terms in objective
+            m (ndarray): 1D array, coefficients for linear terms in objective
+            theta_size (int): number of theta in X
+            max_iter (int): iteration limit on how many times the list of regions is looked through to 
+                find unsolved regions. Default is given in config.yml as 100
+        
+        Returns:
+            None        
+        """
+        
         self.system = {
             'A': A,
             'b': b,
@@ -27,8 +95,27 @@ class ParametricSolver:
         self.create_region(None, None, None, None, None, None, None, None, 0)
 
     def create_region(self, soln_A, soln_b, firm_bound_A, firm_bound_b, added_bound_A, added_bound_b, 
-                      flippable_bound_A, flippable_bound_b, solved_status):
-        region_def = {
+                      flippable_bound_A, flippable_bound_b, solve_status):
+        """Create a new region.
+
+        This method creates a new region element in the 'regions' dict attribute.
+
+        Args:
+            soln_A (ndarray): (see class docstring)
+            soln_b (ndarray): (see class docstring)
+            firm_bound_A (ndarray): (see class docstring)
+            firm_bound_b (ndarray): (see class docstring)
+            added_bound_A (ndarray): (see class docstring)
+            added_bound_b (ndarray): (see class docstring)
+            flippable_bound_A (ndarray): (see class docstring)
+            flippable_bound_b (ndarray): (see class docstring)
+            solve_status (int): (see class docstring)
+
+        Returns:
+            None        
+        """
+        
+        _region_def = {
             'soln_A': soln_A,
             'soln_b': soln_b,
             'firm_bound_A': firm_bound_A,
@@ -37,27 +124,25 @@ class ParametricSolver:
             'added_bound_b': added_bound_b,
             'flippable_bound_A': flippable_bound_A,
             'flippable_bound_b': flippable_bound_b,
-            'solve_status': solved_status
+            'solve_status': solve_status
         }
-        self.regions[self.new_index()] = region_def
-
-    # def solve_original_problem(self):
-    #       self.create_region(
-    #         original_problem.soln_slope,
-    #         original_problem.soln_constant,
-    #         firm_A,
-    #         firm_b,
-    #         flippable_A,
-    #         flippable_b,
-    #         added_A,
-    #         added_b,
-    #         True
-    #     )
+        self.regions[self.new_index()] = _region_def
 
     def gen_new_regions(self, region_index):
+        """Generate new regions with the flippable boundaries of a region.
+
+        This method creates as many region elements in the 'regions' dict attribute
+        as there are flippable bounds in a region. After the flippable bounds are used, 
+        they are recategorised from 'flippable_bound' to 'added_bound' of the region. 
+        After this method is run, solve_status of region is set to 3.
+
+        Args:
+            region_index (int): region to generate new regions from
+        
+        Returns:
+            None
         """
-        Generate new regions with the flippable constraints of a region (region specified by region_index).
-        """
+
         if np.shape(self.regions[region_index]['flippable_bound_b'])==():
             return
 
@@ -108,9 +193,19 @@ class ParametricSolver:
         self.regions[region_index]['solve_status'] = 3
 
     def solve_region_problem(self, region_index):
+        """Solve a region, generating optimal for x and defining its boundaries.
+
+        The method calls region_solver module, and uses the results as inputs for calling 
+        method 'categorise_const' to fill the region element in 'regions' attribute. 
+        After this method is one, 'solve_status' of the region is set to 1.
+
+        Args:
+            region_index (int): region to be solved
+
+        Returns:
+            None 
         """
-        
-        """
+
         # extended flipped bound. Bounds only have columns for theta, so need columns for x.
         # A zeros matrix with no. of rows of flipped bound, and no. of cols of x, then
         # concat with theta no. of cols
@@ -152,6 +247,8 @@ class ParametricSolver:
         self.regions[region_index]['solve_status'] = 1
 
     def new_index(self):
+        """Return a new region index. """
+
         try:
             last_index = list(self.regions.keys())[-1]
             return last_index + 1
@@ -159,12 +256,19 @@ class ParametricSolver:
             return 0
 
     def categorise_const(self, region_index, lhs, rhs):
-        """
-        Categorise boundaries provided as argument, looking at the eqn system of a region.
-        Args:
+        """Categorise input boundaries as either firm, added or flippable for a region.
 
+        This method fills 'soln_A', 'soln_b', 'firm_bound_A', 'firm_bound_b', 
+        'flippable_bound_A', 'flippable_bound_b' of the region element specified 
+        by argument 'region_index'.
         
+        Args:
+            region_index (int): region to be filled with boundary information
+
+        Returns:
+            None        
         """
+
         # if there is no boundary, then categorisation needs not happen
         if np.shape(rhs) == () or np.shape(rhs)[0]==0:
             return
@@ -228,13 +332,16 @@ class ParametricSolver:
         self.regions[region_index]['flippable_bound_b'] = _boundary_concat[_is_flippable, -1]
 
     def reduce_region_bounds(self, region_index):
-        """
-        Take the flippable list of a region and modify the list so duplicates are removed.
+        """Remove flippable boundaries of a region which are duplicates in firm or added
+        boundaries.
 
-        Check within the flippable list itself first, 
-        then check against firm bounds, 
-        finally check against added bounds.
+        Args:
+            region_index (int): region in which flippable boundaries are checked
+
+        Returns:
+            None       
         """
+
         firm_concat = np.concatenate(
             (
                 self.regions[region_index]['firm_bound_A'],
@@ -303,11 +410,27 @@ class ParametricSolver:
         self.regions[region_index]['solve_status'] = 2
 
     def loop_region(self, region_index):
+        """Solve specified region, process its boundaries, and generate new regions.
+        
+        Args:
+            region_index (int): region to process
+
+        Returns:
+            None
+        """
+
         self.solve_region_problem(region_index)
         self.reduce_region_bounds(region_index)
         self.gen_new_regions(region_index)
 
     def solve(self):
+        """Solve the entire MP problem.
+
+        This method runs 'loop_region' method on any unsolved new region,
+        until the problem is exhausted of unsolved regions, or iteration limit 
+        is reached.        
+        """
+
         for i in range(self.max_iter):
             for r in range(len(self.regions)):
                 if self.regions[r]['solve_status'] == 0:
