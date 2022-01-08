@@ -3,12 +3,12 @@ from numpy.lib.function_base import delete
 
 from parametric_model.config.core import config
 from parametric_model.processing.inputs import get_rows, get_cols, get_zeros_rows_index
-from parametric_model.solvers.quadratic_solver import GenericSolver
+from parametric_model.solvers.generic_solver import GenericSolver
 from parametric_model.processing.redundancy_checker import RedundancyChecker
 
 
 class RegionSolver:
-    """Class for solving a region in multi-parametric QP.
+    """Class for solving a region in multi-parametric QP/LP.
 
     The problem is posed as
     min(XT)QX + mX
@@ -18,18 +18,19 @@ class RegionSolver:
     X: a vector of optimised variables x and varying parameter theta, with theta always
     listed after x
     XT: transposed X
-    Q: coefficients for qudratic terms
+    Q: coefficients for quadratic terms
     m: coefficients for linear terms
     A: LHS coefficients in constraints list
     b: RHS constants in constraints list
+    Q is omitted if problem is LP.
 
     To use this class, simply create object and solve:
-        RegionSolver(A, b, Q, m, theta_size).solve()
+        RegionSolver(A, b, m, theta_size, Q).solve()
 
     Attributes:
         A (ndarray): 1D array, LHS of constraint matrix
         b (ndarray): 1D array, RHS of constraint matrix
-        Q (ndarray): 2D array, coefficients of quadratic terms in objective
+        Q (ndarray, optional): 2D array, coefficients of quadratic terms in objective
         m (ndarray): 1D array, coefficients of linear terms inf objective
         theta_size (int): number of varying parameters theta
         x_size (int): number of optimised variables x
@@ -57,7 +58,7 @@ class RegionSolver:
         boundary_constant (ndarray): constant of the region boundaries
     """
 
-    def __init__(self, A, b, Q, m, theta_size):
+    def __init__(self, A, b, m, theta_size, Q=None):
         self.A = A
         self.b = b
         self.Q = Q
@@ -96,7 +97,7 @@ class RegionSolver:
     def _solve_theta(self):
         """Generate a starting, feasible value of theta."""
         
-        _theta_problem = GenericSolver(self.A, self.b, self.Q, self.m)
+        _theta_problem = GenericSolver(self.A, self.b, self.m, Q=self.Q)
         _theta_problem.solve()
         self.theta = _theta_problem.soln[-self.theta_size:]
 
@@ -108,8 +109,11 @@ class RegionSolver:
         # define A without theta, and ignore constraints with only theta terms
         self.x_problem_A = self.A[:, :-self.theta_size]
         # define b ignoring constraints with only theta terms
-        self.x_problem_b = self.b - np.dot(self.A[:, -self.theta_size:], self.theta) 
-        self.x_problem_Q = self.Q[:self.x_size, :self.x_size]
+        self.x_problem_b = self.b - np.dot(self.A[:, -self.theta_size:], self.theta)
+        if self.Q is not None: 
+            self.x_problem_Q = self.Q[:self.x_size, :self.x_size]
+        else:
+            self.x_problem_Q = None
         self.x_problem_m = self.m[:self.x_size]
 
         # delete constraints with only theta terms
@@ -122,7 +126,8 @@ class RegionSolver:
         self.x_problem_b_original = np.delete(self.b, _delete_rows)
 
         # solve for x, duals
-        _x_problem = GenericSolver(self.x_problem_A, self.x_problem_b, self.x_problem_Q, self.x_problem_m)
+        _x_problem = GenericSolver(
+            self.x_problem_A, self.x_problem_b, self.x_problem_m, Q=self.x_problem_Q)
         _x_problem.solve()
         self.x = _x_problem.soln
         self.duals = _x_problem.duals
@@ -136,8 +141,9 @@ class RegionSolver:
         self.M = np.zeros([self.M_len, self.M_len])
         # note it is impossible for the previous row reduction to make Q unfit for top left,
         # because the first rows include the objective function so are impossible to be removed
-        _M_top_left_input = self.Q[:self.x_size, :self.x_size]
-        self.M[:self.x_size, :self.x_size] = _M_top_left_input
+        if self.Q is not None:
+            _M_top_left_input = self.Q[:self.x_size, :self.x_size]
+            self.M[:self.x_size, :self.x_size] = _M_top_left_input
         self.M[:self.x_size, self.x_size:] = self.x_problem_A.T
         self.M[self.x_size:, :self.x_size] = np.multiply(self.x_problem_A.T, self.duals).T
 
@@ -192,7 +198,7 @@ class RegionSolver:
         Then need to add back the theta theta matrix into the constraints to 
         get back the full constraint with theta. We can use x_problem_theta_matrix
         
-        Note for first two, both needs have rows of zeros removed. They can happen in MN is 0.        
+        Note for first two, both needs have rows of zeros removed as it can occur.        
         """
         
         # Deal with subbing theta into constants first
@@ -271,7 +277,7 @@ class RegionSolver:
         self._set_boundaries()
 
 
-########################################################################################
+### QP ###
 # A = np.array(
 #     [[1.0, .0, -3.16515, -3.7546],
 #      [-1.0, .0, 3.16515, 3.7546], # problematic
@@ -314,4 +320,27 @@ class RegionSolver:
 # print('mp.boundary_slope')
 # print(mp.boundary_slope)
 # print('mp.boundary_constant')
+# print(mp.boundary_constant)
+
+### LP #####
+# A = np.array([[0.8, 0.44, -1., 0.],
+#               [0.05, 0.1, 0., -1.],
+#               [0.1, 0.36, 0., 0.],
+#               [-1., 0., 0., 0., ],
+#               [0., -1., 0., 0.],
+#               [0., 0., -1., 0.],
+#               [0., 0., 1., 0.],
+#               [0., 0., 0., -1.],
+#               [0., 0., 0., 1.],
+#               [0., 0., -0.03278688524590164,  1.]])
+
+# b = np.array([24000, 2000., 6000., 0., 0., 0., 6000., 0., 500., 213.1147531])
+
+# m = [-8.1, -10.8, 0., 0.]
+
+# theta_size = 2
+
+# mp = RegionSolver(A, b, m, theta_size)
+# mp.solve()
+# print(mp.boundary_slope)
 # print(mp.boundary_constant)

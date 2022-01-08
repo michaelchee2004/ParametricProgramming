@@ -1,11 +1,11 @@
 import numpy as np
 
-from parametric_model.solvers.quadratic_solver import GenericSolver
+from parametric_model.solvers.generic_solver import GenericSolver
 
 
 def test_quadratic_solver(qp_region_test_data):
     Q, m, A, b, theta_size = qp_region_test_data
-    qp = GenericSolver(A, b, Q, m)
+    qp = GenericSolver(A, b, m, Q=Q)
     qp.solve()
     assert np.allclose(
         qp.soln, 

@@ -13,13 +13,20 @@ class AppConfig(BaseModel):
     app_name: str
     rc_test_data_file: str
     qp_region_test_data_file: str
-    mp_test_data_file: str
+    qp_mp_test_data_file: str
+    lp_region_test_data_file: str
+    lp_mp_test_data_file: str
+    saved_model_file: str
+    verif_test_size: int
 
 
 class SolverConfig(BaseModel):
-    solver_path: str
-    solver_setting: str
-    activedual_tol: float
+    lp_solver_path: str
+    lp_solver_setting: str
+    lp_activedual_tol: float
+    qp_solver_path: str
+    qp_solver_setting: str
+    qp_activedual_tol: float
 
 
 class RedundancyCheckerConfig(BaseModel):
@@ -28,7 +35,8 @@ class RedundancyCheckerConfig(BaseModel):
 
 
 class RegionGenConfig(BaseModel):
-    newregion_tol: float
+    lp_newregion_tol: float
+    qp_newregion_tol: float
     max_iter_default: int
 
 

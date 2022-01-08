@@ -29,12 +29,13 @@ class RedundancyChecker():
     """
 
     def __init__(self, A, b, 
-                 solver_path=config.solver_config.solver_path,
-                 solver=config.solver_config.solver_setting,
                  relax_tol=config.redundancy_checker_config.relax_tol, 
                  zero_tol=config.redundancy_checker_config.zero_tol):
         """Inits class and create pyomo model object ready to be run.
         """
+
+        solver_path = config.solver_config.lp_solver_path
+        solver = config.solver_config.lp_solver_setting
 
         # defining Ax <= b
         self.A = A

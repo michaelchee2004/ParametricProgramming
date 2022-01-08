@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 
 # Package meta-data.
 NAME = 'parametric-programming'
-DESCRIPTION = "A solver for quadratic mult-parametric programming."
+DESCRIPTION = "A solver for linear and quadratic mult-parametric programming."
 URL = "https://github.com/michaelchee2004/ParametricProgramming"
 EMAIL = "michaelchee2004@gmail.com"
 AUTHOR = "Michael Chee"
