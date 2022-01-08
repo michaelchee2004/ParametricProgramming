@@ -1,18 +1,18 @@
 # ParametricProgramming
 
 ## Introduction
-This package is made to solve simple multi-parametric (mp) LP and QP problems.
-The problem is in the form:
-  min (XT)QX + mX
-  s.t.
-  AX <= b
-where
-X: an array of both optimsed variables x and varying parameters θ. Note θ are listed always after all x are declared.
-XT: transposed X
-Q: coefficients for quadratic terms in objective
-m: coefficients for linear terms in objective
-A: coefficients for constraint matrix 
-b: constants for constraint matrix
+This package is made to solve simple multi-parametric (mp) LP and QP problems. <br/>
+The problem is in the form: <br/>
+  min (XT)QX + mX <br/>
+  s.t. <br/>
+  AX <= b <br/>
+where <br/>
+- X: an array of both optimsed variables x and varying parameters θ. Note θ are listed always after all x are declared.
+- XT: transposed X
+- Q: coefficients for quadratic terms in objective
+- m: coefficients for linear terms in objective
+- A: coefficients for constraint matrix 
+- b: constants for constraint matrix
 
 ## Usage
 To use, simply:
