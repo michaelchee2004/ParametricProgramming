@@ -4,8 +4,8 @@
 This package is made to solve simple multi-parametric (mp) LP and QP problems. <br/>
 The problem is in the form: <br/>
   min (XT)QX + mX <br/>
-  s.t. <br/>
-  AX <= b <br/>
+  s.t. AX <= b <br/>
+  
 where <br/>
 - X: an array of both optimsed variables x and varying parameters θ. Note θ are listed always after all x are declared.
 - XT: transposed X
@@ -16,14 +16,14 @@ where <br/>
 
 ## Usage
 To use, simply:
-
+'''
 from parametric_model.solvers.regionn_generator import ParametricSolver
 
 mp = ParametricSolver(A, b, m, theta_size, Q=Q)
 mp.solve()
 theta = [0.7, 0.7]
 mp.get_soln(theta)
-
+'''
 Note Q is optional. If Q is supplied, the problem is treated as mp-QP. Otherwise, it is treated as mp-LP.
 theta_size is used to determine how many rows/columns in 2D array A, m and Q correspond to coefficients for theta. Note theta always occupy the last theta_size number if rows/columns.
 
