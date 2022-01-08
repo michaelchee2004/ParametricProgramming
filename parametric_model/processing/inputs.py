@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import joblib
 import numpy as np
 
 from numpy.core.numeric import full
@@ -10,6 +13,7 @@ from parametric_model.config.core import config
 
 MODEL_ROOT = Path(parametric_model.__file__).parent
 DATA_DIR = MODEL_ROOT / 'data'
+SAVED_MODEL_DIR = MODEL_ROOT / 'saved_models'
 
 
 def read_Ab(file_name):
@@ -165,4 +169,26 @@ def remove_duplicates(checked_object, checklist=None):
     dup_rows = check_duplicates(checked_object, checklist).tolist()
     return np.delete(checked_object, dup_rows, axis=0)
 
+
+def save_mp(model, file_name=config.app_config.saved_model_file):
+    clear_saved_mp()
+    date = datetime.now().strftime('%Y_%m_%d-%H_%M_%S')
+    file_full_name = file_name + '_' + date + '.pkl'
+    file_path = SAVED_MODEL_DIR / file_full_name
+    joblib.dump(model, file_path)
+
+
+def clear_saved_mp():
+    file_list = SAVED_MODEL_DIR.glob('*.pkl')
+    for f in file_list:
+        f.unlink()
+
+
+def load_mp(file_name=None):
+    if file_name==None: 
+        file_name = next(SAVED_MODEL_DIR.glob('*.pkl'))
+    else:
+        file_name = SAVED_MODEL_DIR / file_name
+    model = joblib.load(filename=file_name)
+    return model
 

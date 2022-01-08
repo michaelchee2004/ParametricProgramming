@@ -1,8 +1,9 @@
 import numpy as np
 
-from parametric_model.processing.inputs import check_duplicates, remove_duplicates, get_rows, get_cols
+from parametric_model.processing.inputs import check_duplicates, get_rows, get_cols
 from parametric_model.solvers.region_solver import RegionSolver
 from parametric_model.config.core import config
+
 
 
 class ParametricSolver:
@@ -51,7 +52,10 @@ class ParametricSolver:
 
     """
 
-    def __init__(self, A, b, Q, m, theta_size, max_iter=config.regiongen_config.max_iter_default):
+    lp_newregion_tol = config.regiongen_config.lp_newregion_tol
+    qp_newregion_tol = config.regiongen_config.qp_newregion_tol
+
+    def __init__(self, A, b, m, theta_size, Q=None, max_iter=config.regiongen_config.max_iter_default):
         """ Initialise object by taking in problem inputs and creating an initial region.
 
         The problem is posed as 
@@ -66,14 +70,15 @@ class ParametricSolver:
         m: coefficients for linear terms
         A: LHS coefficients in constraints list
         b: RHS constants in constraints list
+        Q is omitted if problem is LP.
 
         Args:
             A (ndarray): 2D array, LHS of constraint system
             b (ndarray): 1D array, RHS of constraint system
-            Q (ndarray): 2D array, coefficients for quadratic terms in objective
             m (ndarray): 1D array, coefficients for linear terms in objective
             theta_size (int): number of theta in X
-            max_iter (int): iteration limit on how many times the list of regions is looked through to 
+            Q (ndarray, optional): 2D array, coefficients for quadratic terms in objective
+            max_iter (int, optional): iteration limit on how many times the list of regions is looked through to 
                 find unsolved regions. Default is given in config.yml as 100
         
         Returns:
@@ -83,15 +88,15 @@ class ParametricSolver:
         self.system = {
             'A': A,
             'b': b,
-            'Q': Q,
             'm': m,
-            'theta_size': theta_size
+            'theta_size': theta_size,
+            'Q': Q
         }
         self.x_size = get_cols(self.system['A']) - theta_size
         self.col_size = get_rows(self.system['A'])
         self.max_iter = max_iter
 
-        self.regions = {}
+        self.regions = []
         self.create_region(None, None, None, None, None, None, None, None, 0)
 
     def create_region(self, soln_A, soln_b, firm_bound_A, firm_bound_b, added_bound_A, added_bound_b, 
@@ -126,7 +131,7 @@ class ParametricSolver:
             'flippable_bound_b': flippable_bound_b,
             'solve_status': solve_status
         }
-        self.regions[self.new_index()] = _region_def
+        self.regions.append(_region_def)
 
     def gen_new_regions(self, region_index):
         """Generate new regions with the flippable boundaries of a region.
@@ -158,19 +163,19 @@ class ParametricSolver:
         # Create new region and put next_added_A/b as flipped (i.e. these are firm)
         # Then unflip this newly appended row in next_added_A/b (which is last row)
         # to be used for the next region.
+        _newregion_tol = self.lp_newregion_tol if self.system['Q'] is None else self.qp_newregion_tol
         for n in range(no_of_new_regions):
             next_added_A = np.append(
                 next_added_A, [np.multiply(flippable_A[n], -1)], axis=0)
             next_added_b = np.append(next_added_b, [np.multiply(flippable_b[n], -1)])
-            
+        
             self.create_region(
                 None,
                 None,
                 None,
                 None,
                 np.concatenate((added_A.copy(), next_added_A.copy()), axis=0),
-                np.concatenate((added_b.copy(), next_added_b.copy() -
-                                config.regiongen_config.newregion_tol)),
+                np.concatenate((added_b.copy(), next_added_b.copy() - _newregion_tol)),
                 None,
                 None,
                 0)
@@ -232,9 +237,9 @@ class ParametricSolver:
 
         region_problem = RegionSolver(region_problem_A,
                                       region_problem_b,
-                                      self.system['Q'],
                                       self.system['m'],
-                                      self.system['theta_size'])
+                                      self.system['theta_size'],
+                                      Q=self.system['Q'])
         region_problem.solve()
         self.regions[region_index]['soln_A'] = region_problem.soln_slope
         self.regions[region_index]['soln_b'] = region_problem.soln_constant
@@ -245,15 +250,6 @@ class ParametricSolver:
             region_problem.boundary_constant)
 
         self.regions[region_index]['solve_status'] = 1
-
-    def new_index(self):
-        """Return a new region index. """
-
-        try:
-            last_index = list(self.regions.keys())[-1]
-            return last_index + 1
-        except IndexError:
-            return 0
 
     def categorise_const(self, region_index, lhs, rhs):
         """Categorise input boundaries as either firm, added or flippable for a region.
@@ -442,6 +438,38 @@ class ParametricSolver:
                     in range(len(self.regions))]) != 0) == True:
                 break
 
+    def get_soln(self, theta):
+        for r in range(len(self.regions)):
+            _theta = np.array(theta)
+            _all_boundaries_A = np.concatenate(
+                (
+                    self.regions[r]['firm_bound_A'],
+                    self.regions[r]['added_bound_A']),
+                 axis=0)
+            _all_boundaries_b = np.concatenate(
+                (
+                    self.regions[r]['firm_bound_b'],
+                    self.regions[r]['added_bound_b']))
+           
+            _in_boundary = np.dot(_all_boundaries_A, _theta.reshape(-1, 1)) - \
+                _all_boundaries_b.reshape(-1, 1) <= .0
+            _in_all_boundaries = np.all(_in_boundary)
+            if _in_all_boundaries:
+                _x = np.dot(
+                    self.regions[r]['soln_A'],
+                    _theta.reshape(-1, 1)
+                ) + self.regions[r]['soln_b'].reshape(-1, 1)
+                _x = _x.reshape(-1)[:self.x_size]
+                return _x
+            
+        return None
+                
+
+        
+        
+                
+                
+
 
 #########################################################################################
 # A = np.array(
@@ -477,14 +505,31 @@ class ParametricSolver:
 
 # mp = ParametricSolver(A, b, Q, m, theta_size)
 # mp.solve()
-# # mp.create_region(None, None, None, None, None, None, None, None, False)
-# # mp.solve_region_problem(0)
-# # mp.reduce_region_bounds(0)
-# # mp.gen_new_regions(0)
-# # mp.solve_region_problem(1)
-# # mp.reduce_region_bounds(1)
-# # mp.gen_new_regions(1)
-# # mp.solve_region_problem(2)
-# # mp.reduce_region_bounds(2)
-# # mp.gen_new_regions(2)
 # print(mp.regions)
+
+
+##########################################################
+A = np.array([[0.8, 0.44, -1., 0.],
+              [0.05, 0.1, 0., -1.],
+              [0.1, 0.36, 0., 0.],
+              [-1., 0., 0., 0., ],
+              [0., -1., 0., 0.],
+              [0., 0., -1., 0.],
+              [0., 0., 1., 0.],
+              [0., 0., 0., -1.],
+              [0., 0., 0., 1.]])
+
+b = np.array([24000, 2000., 6000., 0., 0., 0., 6000., 0., 500.])
+
+m = [-8.1, -10.8, 0., 0.]
+
+theta_size = 2
+
+mp = ParametricSolver(A, b, m, theta_size)
+mp.max_iter = 5
+mp.loop_region(0)
+mp.solve_region_problem(1)
+mp.reduce_region_bounds(1)
+mp.gen_new_regions(1)
+
+print(mp.regions[1]['added_bound_A'][0][0])
