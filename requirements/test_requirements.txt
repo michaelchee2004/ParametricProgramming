@@ -1,6 +1,6 @@
 -r requirements.txt
-pytest
-black
-flake8
-myPY
-isort
+pytest==6.2.5
+black==21.11b1
+flake8==4.0.1
+myPY==0.910
+isort==5.10.1

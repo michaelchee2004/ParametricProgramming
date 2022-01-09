@@ -1,12 +1,12 @@
 from pathlib import Path
+
 from pydantic import BaseModel
-from strictyaml import YAML, load
+from strictyaml import load
 
 import parametric_model
 
-
 MODEL_ROOT = Path(parametric_model.__file__).parent
-CONFIG_FILE_PATH = MODEL_ROOT / 'config.yml'
+CONFIG_FILE_PATH = MODEL_ROOT / "config.yml"
 
 
 class AppConfig(BaseModel):
@@ -52,12 +52,12 @@ class Config(BaseModel):
     other_config: OtherConfig
 
 
-def get_and_parse_config(config_file_path: Path=CONFIG_FILE_PATH):
+def get_and_parse_config(config_file_path: Path = CONFIG_FILE_PATH):
     if config_file_path.is_file():
-        with open(config_file_path, 'r') as config_file:
+        with open(config_file_path, "r") as config_file:
             parsed_config = load(config_file.read())
-        return  parsed_config
-    raise OSError('Did not find file at path: {config_file_path}')
+        return parsed_config
+    raise OSError("Did not find file at path: {config_file_path}")
 
 
 def validate_config(parsed_config):
@@ -65,8 +65,9 @@ def validate_config(parsed_config):
         app_config=AppConfig(**parsed_config.data),
         solver_config=SolverConfig(**parsed_config.data),
         redundancy_checker_config=RedundancyCheckerConfig(**parsed_config.data),
-        regiongen_config = RegionGenConfig(**parsed_config.data),
-        other_config=OtherConfig(**parsed_config.data))
+        regiongen_config=RegionGenConfig(**parsed_config.data),
+        other_config=OtherConfig(**parsed_config.data),
+    )
     return _config
 
 

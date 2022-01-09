@@ -11,22 +11,20 @@ def test_qp_region_solver(qp_region_test_data):
     assert np.shape(region_prob.boundary_slope) == (4, 2)
     # test values in boundaries LHS
     assert np.allclose(
-        region_prob.boundary_slope, 
-        np.array([[-1.,          0.       ],
-                  [ 0.,         1.        ],
-                  [-3.16515,   -3.7546    ],
-                  [ 0.07350042, 0.05290032]]),
-        rtol=.0,
-        atol=1e-6)
+        region_prob.boundary_slope,
+        np.array(
+            [[-1.0, 0.0], [0.0, 1.0], [-3.16515, -3.7546], [0.07350042, 0.05290032]]
+        ),
+        rtol=0.0,
+        atol=1e-6,
+    )
     # test values in boundaries RHS
-    assert  np.allclose(
-        region_prob.boundary_constant, 
-        np.array([0.,
-                  1.,
-                  -3.582575,
-                  0.06335]),
-        rtol=.0,    
-        atol=1e-6)
+    assert np.allclose(
+        region_prob.boundary_constant,
+        np.array([0.0, 1.0, -3.582575, 0.06335]),
+        rtol=0.0,
+        atol=1e-6,
+    )
 
 
 def test_lp_region_solver(lp_region_test_data):
@@ -39,18 +37,14 @@ def test_lp_region_solver(lp_region_test_data):
     # test values in boundaries LHS
     assert np.allclose(
         region_prob.boundary_slope,
-        np.array([[-1.,          0.],
-                  [1.,         0.],
-                  [0.,   -1.],
-                  [-0.03278689, 1.]]),
-        rtol=.0,
-        atol=1e-6)
+        np.array([[-1.0, 0.0], [1.0, 0.0], [0.0, -1.0], [-0.03278689, 1.0]]),
+        rtol=0.0,
+        atol=1e-6,
+    )
     # test values in boundaries RHS
     assert np.allclose(
         region_prob.boundary_constant,
-        np.array([0.,
-                  6000.,
-                  0.,
-                  213.1147531]),
-        rtol=.0,
-        atol=1e-6)
+        np.array([0.0, 6000.0, 0.0, 213.1147531]),
+        rtol=0.0,
+        atol=1e-6,
+    )

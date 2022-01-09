@@ -1,19 +1,18 @@
 from datetime import datetime
+from pathlib import Path
 
 import joblib
 import numpy as np
 
-from numpy.core.numeric import full
-from pathlib import Path
-# from typing import Union
-
 import parametric_model
 from parametric_model.config.core import config
 
+# from typing import Union
+
 
 MODEL_ROOT = Path(parametric_model.__file__).parent
-DATA_DIR = MODEL_ROOT / 'data'
-SAVED_MODEL_DIR = MODEL_ROOT / 'saved_models'
+DATA_DIR = MODEL_ROOT / "data"
+SAVED_MODEL_DIR = MODEL_ROOT / "saved_models"
 
 
 def read_Ab(file_name):
@@ -23,7 +22,7 @@ def read_Ab(file_name):
         A = Ab[:, :-1]
         b = Ab[:, -1].flatten()
         return A, b
-    raise OSError('Did not find file at path: {data_file_path}')
+    raise OSError("Did not find file at path: {data_file_path}")
 
 
 def read_QmAb(file_name):
@@ -33,79 +32,75 @@ def read_QmAb(file_name):
         x_size = get_cols(QmAb) - 1
         Q = QmAb[:x_size, :-1]
         m = QmAb[x_size, :-1]
-        A = QmAb[x_size+1:, :-1]
-        b = QmAb[x_size+1:, -1].flatten()
+        A = QmAb[x_size + 1 :, :-1]
+        b = QmAb[x_size + 1 :, -1].flatten()
         return Q, m, A, b
-    raise OSError('Did not find file at path: {data_file_path}')
+    raise OSError("Did not find file at path: {data_file_path}")
 
 
 def read_QmA_theta_b(file_name):
     data_file_path = DATA_DIR / file_name
     if data_file_path.is_file():
-        data = np.loadtxt(data_file_path, delimiter=',')
+        data = np.loadtxt(data_file_path, delimiter=",")
         theta_size = int(data[0, 0])
         x_size = get_cols(data) - theta_size - 1
-        Q = data[1:1+x_size+theta_size, :-1]
-        m = data[1+x_size+theta_size, :-1]
-        A = data[1+x_size+theta_size+1:, :-1]
-        b = data[1+x_size+theta_size+1:, -1].flatten()
+        Q = data[1 : 1 + x_size + theta_size, :-1]
+        m = data[1 + x_size + theta_size, :-1]
+        A = data[1 + x_size + theta_size + 1 :, :-1]
+        b = data[1 + x_size + theta_size + 1 :, -1].flatten()
         return Q, m, A, b, theta_size
-    raise OSError('Did not find file at path: {data_file_path}')
+    raise OSError("Did not find file at path: {data_file_path}")
 
 
 def get_rows(M):
-    """Get number of rows in a 2D array.
-    """
+    """Get number of rows in a 2D array."""
     return np.shape(M)[0]
 
 
 def get_cols(M):
-    """Get number of columns in a 2D array.
-    """
+    """Get number of columns in a 2D array."""
     return np.shape(M)[1]
 
 
 def matrix_to_dict(M):
-    """Convert a 1D array into a dict for pyomo input initialisation.
-    """
+    """Convert a 1D array into a dict for pyomo input initialisation."""
     # makes sure input is ndarray, or else indexing fails
-    if type(M) != 'numpy.ndarray':
-        M = np.array(M)        
+    if type(M) != "numpy.ndarray":
+        M = np.array(M)
 
     M_dict = {}
     for i in range(get_rows(M)):
         for j in range(get_cols(M)):
-            M_dict[(i+1, j+1)] = M[i, j]
+            M_dict[(i + 1, j + 1)] = M[i, j]
 
     return M_dict
 
 
 def vector_to_dict(V):
-    """Convert a 1D vector into a dict for pyomo input initialisation.
-    """
+    """Convert a 1D vector into a dict for pyomo input initialisation."""
     # makes sure input is ndarray, or else indexing fails
-    if type(V) != 'numpy.ndarray':
+    if type(V) != "numpy.ndarray":
         V = np.array(V)
 
     V_dict = {}
     for i in range(get_rows(V)):
-        V_dict[(i+1)] = V[i]
+        V_dict[(i + 1)] = V[i]
 
     return V_dict
 
 
 def get_zeros_rows_index(matrix):
     """Return rows of a matrix where all values are close to zero.
-    
+
     Args:
         matrix (ndarray): 2D array, i.e. a matrix
 
-    Returns: 
+    Returns:
         ndarray: 1D array of row indices where the rows are clsoe to zero.
     """
-    element_is_zero = np.isclose(matrix, 0.0,
-                                 rtol=0.0,
-                                 atol=config.other_config.allclose_tol)
+    element_is_zero = np.isclose(
+        matrix, 0.0, rtol=0.0, atol=config.other_config.allclose_tol
+    )
     row_is_zeros = np.all(element_is_zero, axis=1)
     return np.where(row_is_zeros)
 
@@ -115,7 +110,7 @@ def check_duplicates(checked_object, checklist=None):
 
     If a checklist is not provided, the function checks within the array itself
     whether there are duplicate rows. If a checklist is provided, the function
-    checks the array aginst the checklist, and delete rows that also appear on the 
+    checks the array aginst the checklist, and delete rows that also appear on the
     checklist.
 
     Args:
@@ -123,7 +118,7 @@ def check_duplicates(checked_object, checklist=None):
         checklist (ndarray, optional): 1D array to compare against. Defaults to None
 
     Returns:
-        ndarray: row indices where duplicates are found    
+        ndarray: row indices where duplicates are found
     """
     if checklist is None:
         checklist_is_target = True
@@ -136,11 +131,15 @@ def check_duplicates(checked_object, checklist=None):
     for row in range(checked_object.shape[0]):
         duplicate_loc = np.where(
             np.all(
-                np.isclose(checklist,
-                           checked_object[row],
-                           rtol=0,
-                           atol=config.other_config.allclose_tol),
-                axis=1))
+                np.isclose(
+                    checklist,
+                    checked_object[row],
+                    rtol=0,
+                    atol=config.other_config.allclose_tol,
+                ),
+                axis=1,
+            )
+        )
 
         # np where returns a tuple, so duplicate_loc needs [0]
         if checklist_is_target:
@@ -155,7 +154,7 @@ def check_duplicates(checked_object, checklist=None):
 
 
 def remove_duplicates(checked_object, checklist=None):
-    """Check if a 2D array has any duplicate rows, and also delete them. 
+    """Check if a 2D array has any duplicate rows, and also delete them.
 
     See function 'check_duplicates'.
 
@@ -164,7 +163,7 @@ def remove_duplicates(checked_object, checklist=None):
         checklist (ndarray, optional): 1D array to compare against. Defaults to None
 
     Returns:
-        ndarray: row indices where duplicates are found   
+        ndarray: row indices where duplicates are found
     """
     dup_rows = check_duplicates(checked_object, checklist).tolist()
     return np.delete(checked_object, dup_rows, axis=0)
@@ -172,23 +171,22 @@ def remove_duplicates(checked_object, checklist=None):
 
 def save_mp(model, file_name=config.app_config.saved_model_file):
     clear_saved_mp()
-    date = datetime.now().strftime('%Y_%m_%d-%H_%M_%S')
-    file_full_name = file_name + '_' + date + '.pkl'
+    date = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+    file_full_name = file_name + "_" + date + ".pkl"
     file_path = SAVED_MODEL_DIR / file_full_name
     joblib.dump(model, file_path)
 
 
 def clear_saved_mp():
-    file_list = SAVED_MODEL_DIR.glob('*.pkl')
+    file_list = SAVED_MODEL_DIR.glob("*.pkl")
     for f in file_list:
         f.unlink()
 
 
 def load_mp(file_name=None):
-    if file_name==None: 
-        file_name = next(SAVED_MODEL_DIR.glob('*.pkl'))
+    if file_name is None:
+        file_name = next(SAVED_MODEL_DIR.glob("*.pkl"))
     else:
         file_name = SAVED_MODEL_DIR / file_name
     model = joblib.load(filename=file_name)
     return model
-

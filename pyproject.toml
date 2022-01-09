@@ -35,15 +35,16 @@ filterwarnings = [
     # module being the filename (with .py removed).
     "default:invalid escape sequence:DeprecationWarning",
     # ignore use of unregistered marks, because we use many to test the implementation
-    "ignore::_pytest.warning_types.PytestUnknownMarkWarning",
+    # "ignore::_pytest.warning_types.PytestUnknownMarkWarning",
 ]
 
-#[tool.black]
-#target-version = ['py39']
+[tool.black]
+target-version = ['py39']
 
-#[tool.isort]
-#profile = "black"
-#line_length = 100
-#lines_between_sections = 1
-#known_first_party = "sentry"
-#skip = "migrations"
+[tool.isort]
+profile = "black"
+line_length = 90
+lines_between_sections = 1
+known_first_party = "sentry"
+skip = "migrations"
+
