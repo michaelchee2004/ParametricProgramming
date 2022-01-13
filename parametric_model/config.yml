@@ -17,8 +17,10 @@ allclose_tol: 1e-9
 
 lp_solver_path: 'C:\\w64\glpsol'
 lp_solver_setting: 'glpk'
-qp_solver_path: 'C:\\cygwin64\\home\\user1\\Ipopt-3.12.12\\bin\\ipopt'
-qp_solver_setting: 'ipopt'
+# qp_solver_path: 'C:\\cygwin64\\home\\user1\\Ipopt-3.12.12\\bin\\ipopt'
+# qp_solver_setting: 'ipopt'
+qp_solver_path: C:\Program Files\IBM\ILOG\CPLEX_Studio_Community128\cplex\bin\x64_win64\cplex
+qp_solver_setting: cplex
 
 # redundancy_checker
 relax_tol: 1e-9
@@ -30,11 +32,11 @@ zero_tol: 1e-9
 # Too small, then too many active constraints 
 # for LP, glpk automatically make inactive duals exactly zero
 lp_activedual_tol: 1e-12
-qp_activedual_tol: 1e-9
+qp_activedual_tol: 1e-12
 
 # region generator
 lp_newregion_tol: 1e-6
-qp_newregion_tol: 1e-6 # 1000 times the active constraint tolerance
+qp_newregion_tol: 1e-5 # 1000 times the active constraint tolerance
 
 max_iter_default: 100
 

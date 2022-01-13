@@ -129,7 +129,12 @@ class RedundancyChecker:
                 expr=-sum(self.model.A[c, i] * self.model.x[i] for i in self.model.n)
                 + self.model.b[c]
             )
+            # print(self.A)
+            # print(self.b)
             self.solver.solve(self.model, tee=False)
+            # if (self.solver.status != pmo.opt.SolverStatus.ok) or (self.solver.termination_condition != pmo.opt.TerminationCondition.optimal):
+            #     print("Redundancy checker failed.")
+
             # if obj is bigger than 0, mark constarint as redundant
             # self.slack[c-1] = pmo.value(self.model.obj)
             if pmo.value(self.model.obj) > self.zero_tol:
