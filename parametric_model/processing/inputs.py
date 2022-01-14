@@ -54,6 +54,8 @@ def read_QmA_theta_b(file_name):
 
 def get_rows(M):
     """Get number of rows in a 2D array."""
+    # print("get rows")
+    # print(np.shape(M))
     return np.shape(M)[0]
 
 

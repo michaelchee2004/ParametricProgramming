@@ -95,7 +95,9 @@ class RegionSolver:
     def _solve_theta(self):
         """Generate a starting, feasible value of theta."""
 
-        _theta_problem = GenericSolver(self.A, self.b, self.m, Q=self.Q, tee=True)
+        _theta_problem = GenericSolver(
+            self.A, self.b, self.m, Q=self.Q, tee=False, find_feasible=True
+        )
         _theta_problem.solve()
         self.theta = _theta_problem.soln[-self.theta_size :]
 
@@ -131,7 +133,7 @@ class RegionSolver:
         _x_problem.solve()
         self.x = _x_problem.soln
         self.duals = _x_problem.duals
-        print(self.duals)
+        # print(self.duals)
         self.active_const = _x_problem.active_const
         self.duals[np.logical_not(self.active_const).tolist()] = 0.0
 
@@ -341,7 +343,7 @@ class RegionSolver:
 # theta_count = 2
 
 
-# mp = RegionSolver(A, b, Q, m, theta_count)
+# mp = RegionSolver(A, b, m, theta_count, Q=Q)
 # mp.solve()
 # print('mp.boundary_slope')
 # print(mp.boundary_slope)
@@ -371,36 +373,36 @@ class RegionSolver:
 # print(mp.boundary_slope)
 # print(mp.boundary_constant)
 
-A = np.array(
-    [
-        [1., 1., -1., 0.],
-        [5., -4., 0., 0.],
-        [-8., 22., 0., -1.],
-        [-4., -1., 0., 0.],
-        [0., 0., -1., 0.],
-        [0., 0., 1., 0.],
-        [0., 0., 0., -1.],
-        [0., 0., 0., 1.],
-        [0., 0., 1., -0.],
-        [0., 0., -32., 1.]
-    ]
-)
+# A = np.array(
+#     [
+#         [1., 1., -1., 0.],
+#         [5., -4., 0., 0.],
+#         [-8., 22., 0., -1.],
+#         [-4., -1., 0., 0.],
+#         [0., 0., -1., 0.],
+#         [0., 0., 1., 0.],
+#         [0., 0., 0., -1.],
+#         [0., 0., 0., 1.],
+#         [0., 0., 1., -0.],
+#         [0., 0., -32., 1.]
+#     ]
+# )
 
-b = np.array([13., 20., 121., -8., 10, 10., 100., 100., -7.08696658, 214.99999269])
+# b = np.array([13., 20., 121., -8., 10, 10., 100., 100., -7.08696658, 214.99999269])
 
-Q = np.array(
-    [
-        [30. * 2., 0., 0., 0.],
-        [0., 1. * 2, 0., 0.],
-        [0., 0., 0., 0.],
-        [0., 0., 0., 0.]
-    ]
-)
+# Q = np.array(
+#     [
+#         [30. * 2., 0., 0., 0.],
+#         [0., 1. * 2, 0., 0.],
+#         [0., 0., 0., 0.],
+#         [0., 0., 0., 0.]
+#     ]
+# )
 
-m = np.array([0., 0., 0., 0.])
+# m = np.array([0., 0., 0., 0.])
 
-theta_size = 2
-region = RegionSolver(A,b,m,theta_size, Q=Q)
-region.solve()
-print(region.boundary_slope)
-print(region.boundary_constant)
+# theta_size = 2
+# region = RegionSolver(A,b,m,theta_size, Q=Q)
+# region.solve()
+# print(region.boundary_slope)
+# print(region.boundary_constant)

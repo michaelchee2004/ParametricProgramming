@@ -552,7 +552,7 @@ class ParametricSolver:
 # theta_size = 2
 
 
-# mp = ParametricSolver(A, b, Q, m, theta_size)
+# mp = ParametricSolver(A, b, m, theta_size, Q=Q)
 # mp.solve()
 # print(mp.regions)
 
@@ -563,12 +563,7 @@ class ParametricSolver:
 #         [0.8, 0.44, -1.0, 0.0],
 #         [0.05, 0.1, 0.0, -1.0],
 #         [0.1, 0.36, 0.0, 0.0],
-#         [
-#             -1.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#         ],
+#         [-1.0, 0.0, 0.0, 0.0],
 #         [0.0, -1.0, 0.0, 0.0],
 #         [0.0, 0.0, -1.0, 0.0],
 #         [0.0, 0.0, 1.0, 0.0],
@@ -586,44 +581,43 @@ class ParametricSolver:
 # mp = ParametricSolver(A, b, m, theta_size)
 # mp.max_iter = 5
 # mp.loop_region(0)
-# mp.solve_region_problem(1)
-# mp.reduce_region_bounds(1)
-# mp.gen_new_regions(1)
-
+# mp.loop_region(1)
+# print(mp.regions)
 # print(mp.regions[1]["added_bound_A"][0][0])
 
-A = np.array(
-    [
-        [1., 1., -1., 0.],
-        [5., -4., 0., 0.],
-        [-8., 22., 0., -1.],
-        [-4., -1., 0., 0.],
-        [0., 0., -1., 0.],
-        [0., 0., 1., 0.],
-        [0., 0., 0., -1.],
-        [0., 0., 0., 1.]
-    ]
-)
 
-b = np.array([13., 20., 121., -8., 10, 10., 100., 100.])
+# A = np.array(
+#     [
+#         [1., 1., -1., 0.],
+#         [5., -4., 0., 0.],
+#         [-8., 22., 0., -1.],
+#         [-4., -1., 0., 0.],
+#         [0., 0., -1., 0.],
+#         [0., 0., 1., 0.],
+#         [0., 0., 0., -1.],
+#         [0., 0., 0., 1.]
+#     ]
+# )
 
-Q = np.array(
-    [
-        [30. * 2., 0., 0., 0.],
-        [0., 1. * 2, 0., 0.],
-        [0., 0., 0., 0.],
-        [0., 0., 0., 0.]
-    ]
-)
+# b = np.array([13., 20., 121., -8., 10, 10., 100., 100.])
 
-m = np.array([0., 0., 0., 0.])
+# Q = np.array(
+#     [
+#         [30. * 2., 0., 0., 0.],
+#         [0., 1. * 2, 0., 0.],
+#         [0., 0., 0., 0.],
+#         [0., 0., 0., 0.]
+#     ]
+# )
 
-theta_size = 2
-mp = ParametricSolver(A, b, m, theta_size, Q=Q)
-mp.max_iter = 5
-mp.loop_region(0)
-mp.loop_region(1)
-mp.loop_region(2)
+# m = np.array([0., 0., 0., 0.])
+# np.set_printoptions(precision=10)
+# theta_size = 2
+# mp = ParametricSolver(A, b, m, theta_size, Q=Q)
+# mp.max_iter = 5
+# mp.loop_region(0)
+# mp.loop_region(1)
+# mp.loop_region(2)
+# # print(mp.regions)
+# mp.loop_region(3)
 # print(mp.regions)
-mp.loop_region(3)
-print(mp.regions)

@@ -33,6 +33,9 @@ class RedundancyChecker:
         reduced_b (ndarray): 1D array, b with redundant rows removed
     """
 
+    solver_path = config.solver_config.lp_solver_path
+    solver_setting = config.solver_config.lp_solver_setting
+
     def __init__(
         self,
         A,
@@ -42,18 +45,12 @@ class RedundancyChecker:
     ):
         """Inits class and create pyomo model object ready to be run."""
 
-        solver_path = config.solver_config.lp_solver_path
-        solver = config.solver_config.lp_solver_setting
-
         # defining Ax <= b
         self.A = A
         self.b = b
         # opt problem
         self.model = None
         self.solver = None
-        # solver
-        self.solver_path = solver_path
-        self.solver_setting = solver
         # tolerances
         self.relax_tol = relax_tol
         self.zero_tol = zero_tol
@@ -96,6 +93,8 @@ class RedundancyChecker:
         self.solver = pmo.SolverFactory(
             self.solver_setting, executable=self.solver_path
         )
+        if self.solver_setting == "cplex":
+            self.solver.options["lpmethod"] = 2
 
     def remove_redundancy(self):
         """
@@ -132,7 +131,9 @@ class RedundancyChecker:
             # print(self.A)
             # print(self.b)
             self.solver.solve(self.model, tee=False)
-            # if (self.solver.status != pmo.opt.SolverStatus.ok) or (self.solver.termination_condition != pmo.opt.TerminationCondition.optimal):
+            # if (self.solver.status != pmo.opt.SolverStatus.ok) or
+            # (self.solver.termination_condition
+            #   != pmo.opt.TerminationCondition.optimal):
             #     print("Redundancy checker failed.")
 
             # if obj is bigger than 0, mark constarint as redundant

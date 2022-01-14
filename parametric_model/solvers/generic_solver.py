@@ -57,7 +57,7 @@ class GenericSolver:
     qp_solver_setting = config.solver_config.qp_solver_setting
     qp_activedual_tol = config.solver_config.qp_activedual_tol
 
-    def __init__(self, A, b, m, Q=None, tee=False):
+    def __init__(self, A, b, m, Q=None, tee=False, find_feasible=False):
         """Initialise object by taking in inputs and creating pyomo model object."""
 
         self.A = A
@@ -66,6 +66,7 @@ class GenericSolver:
         self.m = m
         # solver
         self.tee = tee
+        self.find_feasible = find_feasible
         # get no of var and constraints
         self.x_size = get_cols(self.A)
         self.c_size = get_rows(A)
@@ -96,18 +97,37 @@ class GenericSolver:
             self.model.Q = pmo.Param(self.model.n, self.model.n, initialize=_Q_init)
         self.model.m = pmo.Param(self.model.n, initialize=_m_init)
         self.model.x = pmo.Var(self.model.n)
+        if self.find_feasible is True:
+            self.model.s = pmo.Var(self.model.c, domain=pmo.NonNegativeReals)
+            self.model.z = pmo.Var()
         self.model.dual = pmo.Suffix(direction=pmo.Suffix.IMPORT)
         self.model.constraints = pmo.ConstraintList()
 
-        # Ax <= b
-        for c in self.model.c:
-            self.model.constraints.add(
-                sum(self.model.A[c, i] * self.model.x[i] for i in self.model.n)
-                <= self.model.b[c]
-            )
+        # Model Ax <= b.
+        # if finding feasible point, we maximise the minimum slack. Add slack var, and
+        # model objective z to be smaller than all slacks
+        if self.find_feasible is True:
+            for c in self.model.c:
+                self.model.constraints.add(
+                    sum(self.model.A[c, i] * self.model.x[i] for i in self.model.n)
+                    + self.model.s[c]
+                    <= self.model.b[c]
+                )
+                self.model.constraints.add(self.model.z <= self.model.s[c])
+        # if not finding feasible point, constraints are simply Ax M= b.
+        else:
+            for c in self.model.c:
+                self.model.constraints.add(
+                    sum(self.model.A[c, i] * self.model.x[i] for i in self.model.n)
+                    <= self.model.b[c]
+                )
 
-        # obj = 0.5 x^T Q x + mx
-        if self.Q is not None:
+        # if we are finding feasible point, we are maximising the smallest slack,
+        # which is modelled as z - see constraint creation step.
+        if self.find_feasible is True:
+            self.model.obj = pmo.Objective(expr=-self.model.z)
+        # QP objective is obj = 0.5 x^T Q x + mx
+        elif self.Q is not None:
             self.model.obj = pmo.Objective(
                 expr=(
                     0.5
@@ -121,24 +141,25 @@ class GenericSolver:
                     + sum(self.model.m[i] * self.model.x[i] for i in self.model.n)
                 )
             )
+        # LP objective is obj = mx
         else:
             self.model.obj = pmo.Objective(
                 expr=sum(self.model.m[i] * self.model.x[i] for i in self.model.n)
             )
 
-        # define solver
-        if self.Q is None:
+        # set solver depending on problem is LP or QP
+        if self.Q is None or self.find_feasible is True:
             self.solver = pmo.SolverFactory(
                 self.lp_solver_setting, tee=self.tee, executable=self.lp_solver_path
             )
+            if self.lp_solver_setting == "cplex":
+                self.solver.options["lpmethod"] = 2
         else:
             self.solver = pmo.SolverFactory(
-                self.qp_solver_setting, tee=self.tee, executable=self.qp_solver_path
+                self.lp_solver_setting, tee=self.tee, executable=self.lp_solver_path
             )
-
-        self.solver.options['qpmethod'] = 2
-        # if self.Q is not None:
-        #     self.solver.options["tol"] = 1e-6
+            if self.qp_solver_setting == "cplex":
+                self.solver.options["qpmethod"] = 2
 
     def solve(self):
         """Solve optimisation problem and save results to object attributes.
@@ -146,7 +167,7 @@ class GenericSolver:
         Results saved include attribute 'soln', 'duals' and 'active_const'.
         """
 
-        self.solver.solve(self.model, tee=True)
+        self.solver.solve(self.model, tee=self.tee)
 
         self.soln = np.empty([self.x_size])
         for i in range(self.x_size):
@@ -181,7 +202,8 @@ class GenericSolver:
 #     ]
 # )
 
-# b = np.array([13., 20., 121., -8., 10, 10., 100., 100., -7.08696658, 214.99999269])
+# b = np.array([13., 20., 121., -8.,
+#     10, 10., 100., 100., -7.08696658, 214.99999269])
 
 # Q = np.array(
 #     [
@@ -195,5 +217,45 @@ class GenericSolver:
 # m = np.array([0., 0., 0., 0.])
 
 # theta_size = 2
-# opt = GenericSolver(A, b, m, Q=Q, tee=True)
+# opt = GenericSolver(A, b, m, Q=Q, tee=False, find_feasible=True)
 # opt.solve()
+# print(opt.soln)
+
+# A = np.array(
+#     [[1.0, .0, -3.16515, -3.7546],
+#      [-1.0, .0, 3.16515, 3.7546],  # problematic
+#      [-0.0609, .0, -0.17355, 0.2717],
+#      [-0.0064, .0, -0.06585, -0.4714],
+#      [.0, 1.0, -1.81960, 3.2841],  # problematic
+#      [.0, -1.0, 1.81960, -3.2841],
+#      [.0, .0, -1.0, .0],
+#      [.0, .0, 1., .0],
+#      [.0, .0, .0, -1.0],
+#      [.0, .0, .0, 1.0],
+#      # additional
+#      [.0, .0, -3.16515   , -3.7546],
+#      [.0, .0, 2.82163241, -2.09545779],
+#      [.0, .0, 0.07350042, 0.05290032]]
+# )
+
+# b = np.array(
+#     [0.417425, 3.582575, 0.413225, 0.467075, 1.090200, 2.909800, .0, 1., .0, 1.,
+#      # additional
+#      -3.582575, 0.04398198, 0.063350]
+# )
+
+# m = np.array(
+#     [.0, .0, .0, .0]
+# )
+
+# Q = np.array(
+#     [[0.0098 * 2, 0.0063, .0, .0],
+#      [0.0063, 0.00995 * 2, .0, .0],
+#      [.0, .0, .0, .0],
+#      [.0, .0, .0, .0]]
+# )
+
+# theta_count = 2
+# opt = GenericSolver(A, b, m, Q=Q, tee=False, find_feasible=True)
+# opt.solve()
+# print(opt.soln)
