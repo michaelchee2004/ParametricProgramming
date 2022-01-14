@@ -611,7 +611,6 @@ class ParametricSolver:
 # )
 
 # m = np.array([0., 0., 0., 0.])
-# np.set_printoptions(precision=10)
 # theta_size = 2
 # mp = ParametricSolver(A, b, m, theta_size, Q=Q)
 # mp.max_iter = 5
