@@ -6,7 +6,11 @@ from parametric_model.solvers.generic_solver import GenericSolver
 
 
 def test_quadratic_solver(qp_region_test_data):
-    Q, m, A, b, theta_size = qp_region_test_data
+    Q, m, A, W, b = qp_region_test_data
+    Q = np.concatenate((Q, np.zeros((2, 2))), axis=1)
+    Q = np.concatenate((Q, np.zeros((2, 4))), axis=0)
+    m = np.concatenate((m, np.zeros((2))))
+    A = np.concatenate((A, W), axis=1)
     qp = GenericSolver(A, b, m, Q=Q)
     qp.solve()
     assert np.allclose(

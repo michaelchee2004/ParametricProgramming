@@ -6,11 +6,11 @@ from parametric_model.solvers.region_generator import ParametricSolver
 
 
 def mp_data():
-    Q, m, A, b, theta_size = read_QmA_theta_b(config.app_config.qp_mp_test_data_file)
+    Q, m, A, W, b = read_QmA_theta_b(config.app_config.qp_mp_test_data_file)
     QmAb_theta_collection = collections.namedtuple(
-        "QmA_theta_b", ["Q", "m", "A", "b", "theta_size"]
+        "QmA_theta_b", ["Q", "m", "A", "W", "b"]
     )
-    QmAb_theta = QmAb_theta_collection(Q, m, A, b, theta_size)
+    QmAb_theta = QmAb_theta_collection(Q, m, A, W, b)
     return QmAb_theta
 
 
@@ -42,7 +42,7 @@ def mp_data():
 
 # theta_size = 2
 
-Q, m, A, b, theta_size = mp_data()
-mp = ParametricSolver(A, b, m, theta_size, Q=Q)
+Q, m, A, W, b = mp_data()
+mp = ParametricSolver(A, W, b, m, Q=Q)
 mp.solve()
 save_mp(mp)

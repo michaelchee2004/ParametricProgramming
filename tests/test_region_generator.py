@@ -4,8 +4,8 @@ from parametric_model.solvers.region_generator import ParametricSolver
 
 
 def test_qp_region_gen(qp_mp_test_data):
-    Q, m, A, b, theta_size = qp_mp_test_data
-    mp = ParametricSolver(A, b, m, theta_size, Q=Q)
+    Q, m, A, W, b = qp_mp_test_data
+    mp = ParametricSolver(A, W, b, m, Q=Q)
     mp.solve()
     # test no of regions
     assert len(mp.regions) == 5
@@ -36,9 +36,9 @@ def test_qp_region_gen(qp_mp_test_data):
 
 
 def test_lp_region_gen(lp_mp_test_data):
-    Q, m, A, b, theta_size = lp_mp_test_data
+    Q, m, A, W, b = lp_mp_test_data
     Q = None
-    mp = ParametricSolver(A, b, m, theta_size)
+    mp = ParametricSolver(A, W, b, m)
     mp.solve()
     # test no of regions
     assert len(mp.regions) == 2

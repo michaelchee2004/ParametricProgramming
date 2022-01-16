@@ -4,8 +4,8 @@ from parametric_model.solvers.region_solver import RegionSolver
 
 
 def test_qp_region_solver(qp_region_test_data):
-    Q, m, A, b, theta_size = qp_region_test_data
-    region_prob = RegionSolver(A, b, m, theta_size, Q=Q)
+    Q, m, A, W, b = qp_region_test_data
+    region_prob = RegionSolver(A, W, b, m, Q=Q)
     region_prob.solve()
     # test no of boundaries
     assert np.shape(region_prob.boundary_slope) == (4, 2)
@@ -28,9 +28,9 @@ def test_qp_region_solver(qp_region_test_data):
 
 
 def test_lp_region_solver(lp_region_test_data):
-    Q, m, A, b, theta_size = lp_region_test_data
+    Q, m, A, W, b = lp_region_test_data
     Q = None
-    region_prob = RegionSolver(A, b, m, theta_size)
+    region_prob = RegionSolver(A, W, b, m)
     region_prob.solve()
     # test no of boundaries
     assert np.shape(region_prob.boundary_slope) == (4, 2)

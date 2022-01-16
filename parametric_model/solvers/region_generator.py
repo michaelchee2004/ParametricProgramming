@@ -9,17 +9,19 @@ class ParametricSolver:
     """A solver class for multi-parametric LP/QP problems.
 
     The problem is posed as
-    min (XT)QX + mX
+    min(XT)QX + mX
     s.t.
-    Ax <= b
+    Ax + Wθ <= b
     where
-    X: a vector of optimised variables x and varying parameter theta, with theta always
-        listed after x
+    X: a vector of optimised variables
+    θ: a vector of varying parameters
     XT: transposed X
-    Q: coefficients for qudratic terms
+    Q: coefficients for quadratic terms in objective
     m: coefficients for linear terms
-    A: LHS coefficients in constraints list
+    A: coefficients for X in constraints list
+    W: coefficients for θ in constraints list
     b: RHS constants in constraints list
+    Q is omitted if problem is LP.
 
     Attributes:
         system (dict): a dict representing the original problem (Q, b, Q, m, theta_size).
@@ -30,13 +32,6 @@ class ParametricSolver:
         regions (dict): a dict storing results for all the regions
 
     Notes:
-        In 'system' attribute, distinction between coefficients for x and for theta are
-        made in the folllowing way:
-            'theta_size' is the number of varying parameters.
-            In 1D array 'm', the last theta_size elements are of theta;
-            in 2D array 'Q', the last theta_size rows and columns are of theta;
-            in 2D array 'A', the last theta_size columns are of theta.
-
         Within 'regions' dict attribute, each region is defined by a dict with the
         following keys:
             'soln_A'/'soln_b': slope and constant for the parametrised optimal solution of
@@ -59,33 +54,36 @@ class ParametricSolver:
     def __init__(
         self,
         A,
+        W, 
         b,
         m,
-        theta_size,
         Q=None,
         max_iter=config.regiongen_config.max_iter_default,
     ):
         """Initialise object by taking in problem inputs and creating initial region.
 
         The problem is posed as
-        min (XT)QX + mX
+        min(XT)QX + mX
         s.t.
-        Ax <= b
+        Ax + Wθ <= b
         where
-        X: a vector of optimised variables x and varying parameter theta, with theta
-            always listed after x
+        X: a vector of optimised variables
+        θ: a vector of varying parameters
         XT: transposed X
-        Q: coefficients for qudratic terms
+        Q: coefficients for quadratic terms in objective
         m: coefficients for linear terms
-        A: LHS coefficients in constraints list
+        A: coefficients for X in constraints list
+        W: coefficients for θ in constraints list
         b: RHS constants in constraints list
         Q is omitted if problem is LP.
 
         Args:
-            A (ndarray): 2D array, LHS of constraint system
+            A (ndarray): 2D array, coefficients of optimised variables X in 
+                constraint system
+            W (ndarray): 2D array, coefficients of varying parameters θ in 
+                constraint system
             b (ndarray): 1D array, RHS of constraint system
             m (ndarray): 1D array, coefficients for linear terms in objective
-            theta_size (int): number of theta in X
             Q (ndarray, optional): 2D array, coefficients for quadratic terms in
                 objective
             max_iter (int, optional): iteration limit on how many times the list of
@@ -96,8 +94,9 @@ class ParametricSolver:
             None
         """
 
-        self.system = {"A": A, "b": b, "m": m, "theta_size": theta_size, "Q": Q}
-        self.x_size = get_cols(self.system["A"]) - theta_size
+        self.system = {"A": A, "W": W, "b": b, "m": m, "Q": Q}
+        self.x_size = get_cols(self.system["A"])
+        self.theta_size = get_cols(self.system["W"])
         self.col_size = get_rows(self.system["A"])
         self.max_iter = max_iter
 
@@ -218,12 +217,12 @@ class ParametricSolver:
         self.regions[region_index]["solve_status"] = 3
 
     def solve_region_problem(self, region_index):
-        """Solve a region, generating optimal for x and defining its boundaries.
+        """Solve a region, generating parametric x and defining boundaries.
 
         The method calls region_solver module, and uses the results as inputs for
         calling method 'categorise_const' to fill the region element in 'regions'
-        attribute. After this method is one, 'solve_status' of the region is set
-        to 1.
+        attribute. After this method is complete, 'solve_status' of the region is 
+        set to 1.
 
         Args:
             region_index (int): region to be solved
@@ -232,39 +231,44 @@ class ParametricSolver:
             None
         """
 
-        # extended flipped bound. Bounds only have columns for theta, so need columns
+        # Boundaries only have columns for theta, so need columns
         # for x.
         # A zeros matrix with no. of rows of flipped bound, and no. of cols of x, then
         # concat with theta no. of cols
         try:
-            added_bound_A_with_x = np.concatenate(
+            _region_problem_A = np.concatenate(
                 (
+                    self.system['A'],
                     np.zeros(
                         [
                             np.shape(self.regions[region_index]["added_bound_A"])[0],
-                            np.shape(self.system["A"])[1] - self.system["theta_size"],
+                            self.x_size
                         ]
                     ),
-                    self.regions[region_index]["added_bound_A"],
                 ),
-                axis=1,
-            )
-            region_problem_A = np.concatenate(
-                (self.system["A"], added_bound_A_with_x), axis=0
-            )
-            region_problem_b = np.concatenate(
+                axis=0,
+            )           
+            _region_problem_W = np.concatenate(
+                (
+                    self.system['W'],
+                    self.regions[region_index]['added_bound_A']
+                ),
+                axis=0
+            )            
+            _region_problem_b = np.concatenate(
                 (self.system["b"], self.regions[region_index]["added_bound_b"])
             )
         # index error if there is no added bound at all
         except IndexError:
-            region_problem_A = self.system["A"]
-            region_problem_b = self.system["b"]
+            _region_problem_A = self.system["A"]
+            _region_problem_W = self.system["W"]
+            _region_problem_b = self.system["b"]
 
         region_problem = RegionSolver(
-            region_problem_A,
-            region_problem_b,
+            _region_problem_A,
+            _region_problem_W,
+            _region_problem_b,
             self.system["m"],
-            self.system["theta_size"],
             Q=self.system["Q"],
         )
         region_problem.solve()
@@ -296,10 +300,11 @@ class ParametricSolver:
         # if there is no boundary, then categorisation needs not happen
         if np.shape(rhs) == () or np.shape(rhs)[0] == 0:
             return
+
         # concatenate LHS and RHS of eqns so they can be compared together
         _boundary_concat = np.concatenate((lhs, np.array([rhs]).T), axis=1)
-        _boundary_concat_normal = _boundary_concat.copy()
         # 'normalise' each set of eqns so RHS is 1 (divide all terms by RHS value)
+        _boundary_concat_normal = _boundary_concat.copy()
         for row in range(np.shape(_boundary_concat)[0]):
             if _boundary_concat[row, -1] != 0.0:
                 _boundary_concat_normal[row] = np.divide(
@@ -332,17 +337,15 @@ class ParametricSolver:
 
         # same for original set of eqns
         _sys_concat = np.concatenate(
-            (self.system["A"], np.array([self.system["b"]]).T), axis=1
+            (self.system['W'], np.array([self.system['b']]).T), axis=1
         )
         # ignore eqns with x terms
-        _theta_only_rows = np.all(_sys_concat[:, : self.x_size] == 0.0, axis=1)
+        _theta_only_rows = np.all(self.system['A'] == 0.0, axis=1)
         if np.shape(_theta_only_rows)[0] == 0:
             _is_firm = []
         else:
             # -theta_size-1: to extract the thetas plus the rhs attached
-            _sys_concat = _sys_concat[
-                _theta_only_rows, -self.system["theta_size"] - 1 :
-            ]
+            _sys_concat = _sys_concat[_theta_only_rows]
             _sys_concat_normal = _sys_concat.copy()
             for row in range(np.shape(_sys_concat)[0]):
                 if _sys_concat[row, -1] != 0.0:
@@ -356,9 +359,7 @@ class ParametricSolver:
         # return indexes from _boundary_concat
         _boundary_indices = np.arange(np.shape(_boundary_concat_normal)[0])
         _is_flippable = np.where(
-            np.logical_not(
-                np.in1d(_boundary_indices, np.concatenate((_is_firm, _is_added)))
-            )
+            ~np.in1d(_boundary_indices, np.concatenate((_is_firm, _is_added)))            
         )[0].tolist()
 
         self.regions[region_index]["firm_bound_A"] = _boundary_concat[_is_firm, :-1]
@@ -521,16 +522,29 @@ class ParametricSolver:
 
 ###########################################################################
 # A = np.array(
-#     [[1.0, .0, -3.16515, -3.7546],
-#      [-1.0, .0, 3.16515, 3.7546],
-#      [-0.0609, .0, -0.17355, 0.2717],
-#      [-0.0064, .0, -0.06585, -0.4714],
-#      [.0, 1.0, -1.81960, 3.2841],
-#      [.0, -1.0, 1.81960, -3.2841],
-#      [.0, .0, -1.0, .0],
-#      [.0, .0, 1.0, .0],
-#      [.0, .0, .0, -1.0],
-#      [.0, .0, .0, 1.0]]
+#     [[1.0, .0],
+#      [-1.0, .0],
+#      [-0.0609, .0],
+#      [-0.0064, .0],
+#      [.0, 1.0],
+#      [.0, -1.0],
+#      [.0, .0],
+#      [.0, .0],
+#      [.0, .0],
+#      [.0, .0]]
+# )
+
+# W = np.array(
+#     [[-3.16515, -3.7546],
+#      [ 3.16515, 3.7546],
+#      [ -0.17355, 0.2717],
+#      [ -0.06585, -0.4714],
+#      [ -1.81960, 3.2841],
+#      [ 1.81960, -3.2841],
+#      [ -1.0, .0],
+#      [ 1.0, .0],
+#      [ .0, -1.0],
+#      [ .0, 1.0]]
 # )
 
 # b = np.array(
@@ -539,20 +553,15 @@ class ParametricSolver:
 # )
 
 # m = np.array(
-#     [.0, .0, .0, .0]
+#     [.0, .0]
 # )
 
 # Q = np.array(
-#     [[0.0098*2, 0.0063, .0, .0],
-#      [0.0063, 0.00995*2, .0, .0],
-#      [.0, .0, .0, .0],
-#      [.0, .0, .0, .0]]
+#     [[0.0098*2, 0.0063],
+#      [0.0063, 0.00995*2]]
 # )
 
-# theta_size = 2
-
-
-# mp = ParametricSolver(A, b, m, theta_size, Q=Q)
+# mp = ParametricSolver(A, W, b, m, Q=Q)
 # mp.solve()
 # print(mp.regions)
 

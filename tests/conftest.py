@@ -16,23 +16,23 @@ def rc_test_data():
 
 @pytest.fixture()
 def qp_region_test_data():
-    Q, m, A, b, theta_size = read_QmA_theta_b(
+    Q, m, A, W, b = read_QmA_theta_b(
         config.app_config.qp_region_test_data_file
     )
     QmAb_theta_collection = collections.namedtuple(
-        "QmA_theta_b", ["Q", "m", "A", "b", "theta_size"]
+        "QmA_theta_b", ["Q", "m", "A", "W", "b"]
     )
-    QmAb_theta = QmAb_theta_collection(Q, m, A, b, theta_size)
+    QmAb_theta = QmAb_theta_collection(Q, m, A, W, b)
     return QmAb_theta
 
 
 @pytest.fixture()
 def qp_mp_test_data():
-    Q, m, A, b, theta_size = read_QmA_theta_b(config.app_config.qp_mp_test_data_file)
+    Q, m, A, W, b = read_QmA_theta_b(config.app_config.qp_mp_test_data_file)
     QmAb_theta_collection = collections.namedtuple(
-        "QmA_theta_b", ["Q", "m", "A", "b", "theta_size"]
+        "QmA_theta_b", ["Q", "m", "A", "W", "b"]
     )
-    QmAb_theta = QmAb_theta_collection(Q, m, A, b, theta_size)
+    QmAb_theta = QmAb_theta_collection(Q, m, A, W, b)
     return QmAb_theta
 
 
