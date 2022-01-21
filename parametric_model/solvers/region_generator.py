@@ -24,7 +24,7 @@ class ParametricSolver:
     Q is omitted if problem is LP.
 
     Attributes:
-        system (dict): a dict representing the original problem (Q, b, Q, m, theta_size).
+        system (dict): a dict representing the original problem (A, W, b, m, Q).
         x_size: (int): number of variables x in problem
         col_size (int): total number of x and theta
         max_iter (int): setting limiting how many times the regions list is looked through
@@ -54,7 +54,7 @@ class ParametricSolver:
     def __init__(
         self,
         A,
-        W, 
+        W,
         b,
         m,
         Q=None,
@@ -78,9 +78,9 @@ class ParametricSolver:
         Q is omitted if problem is LP.
 
         Args:
-            A (ndarray): 2D array, coefficients of optimised variables X in 
+            A (ndarray): 2D array, coefficients of optimised variables X in
                 constraint system
-            W (ndarray): 2D array, coefficients of varying parameters θ in 
+            W (ndarray): 2D array, coefficients of varying parameters θ in
                 constraint system
             b (ndarray): 1D array, RHS of constraint system
             m (ndarray): 1D array, coefficients for linear terms in objective
@@ -221,7 +221,7 @@ class ParametricSolver:
 
         The method calls region_solver module, and uses the results as inputs for
         calling method 'categorise_const' to fill the region element in 'regions'
-        attribute. After this method is complete, 'solve_status' of the region is 
+        attribute. After this method is complete, 'solve_status' of the region is
         set to 1.
 
         Args:
@@ -238,23 +238,19 @@ class ParametricSolver:
         try:
             _region_problem_A = np.concatenate(
                 (
-                    self.system['A'],
+                    self.system["A"],
                     np.zeros(
                         [
                             np.shape(self.regions[region_index]["added_bound_A"])[0],
-                            self.x_size
+                            self.x_size,
                         ]
                     ),
                 ),
                 axis=0,
-            )           
+            )
             _region_problem_W = np.concatenate(
-                (
-                    self.system['W'],
-                    self.regions[region_index]['added_bound_A']
-                ),
-                axis=0
-            )            
+                (self.system["W"], self.regions[region_index]["added_bound_A"]), axis=0
+            )
             _region_problem_b = np.concatenate(
                 (self.system["b"], self.regions[region_index]["added_bound_b"])
             )
@@ -337,10 +333,10 @@ class ParametricSolver:
 
         # same for original set of eqns
         _sys_concat = np.concatenate(
-            (self.system['W'], np.array([self.system['b']]).T), axis=1
+            (self.system["W"], np.array([self.system["b"]]).T), axis=1
         )
         # ignore eqns with x terms
-        _theta_only_rows = np.all(self.system['A'] == 0.0, axis=1)
+        _theta_only_rows = np.all(self.system["A"] == 0.0, axis=1)
         if np.shape(_theta_only_rows)[0] == 0:
             _is_firm = []
         else:
@@ -359,7 +355,7 @@ class ParametricSolver:
         # return indexes from _boundary_concat
         _boundary_indices = np.arange(np.shape(_boundary_concat_normal)[0])
         _is_flippable = np.where(
-            ~np.in1d(_boundary_indices, np.concatenate((_is_firm, _is_added)))            
+            ~np.in1d(_boundary_indices, np.concatenate((_is_firm, _is_added)))
         )[0].tolist()
 
         self.regions[region_index]["firm_bound_A"] = _boundary_concat[_is_firm, :-1]

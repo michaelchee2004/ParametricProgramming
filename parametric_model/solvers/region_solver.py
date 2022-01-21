@@ -28,12 +28,12 @@ class RegionSolver:
         problem.solve()
 
     Attributes:
-        A (ndarray): 2D array, coefficients of optimised variables X in 
+        A (ndarray): 2D array, coefficients of optimised variables X in
             constraint matrix
         W (ndarray): 2D array, coefficients of varying parameters θ in
             constraint matrix
         b (ndarray): 1D array, RHS of constraint matrix
-        Q (ndarray, optional): 2D array, coefficients of quadratic terms in 
+        Q (ndarray, optional): 2D array, coefficients of quadratic terms in
             objective
         m (ndarray): 1D array, coefficients of linear terms inf objective
         theta_size (int): number of varying parameters theta
@@ -124,16 +124,12 @@ class RegionSolver:
         _delete_rows = get_zeros_rows_index(self.x_problem_A)
         self.x_problem_A = np.delete(self.x_problem_A, _delete_rows, axis=0)
         self.x_problem_b = np.delete(self.x_problem_b, _delete_rows)
-        self.x_problem_W = np.delete(
-            self.W, _delete_rows, axis=0
-        )
+        self.x_problem_W = np.delete(self.W, _delete_rows, axis=0)
         # this is b without the subtraction of theta
         self.x_problem_b_original = np.delete(self.b, _delete_rows)
 
         # solve for x, duals
-        _x_problem = GenericSolver(
-            self.x_problem_A, self.x_problem_b, self.m, Q=self.Q
-        )
+        _x_problem = GenericSolver(self.x_problem_A, self.x_problem_b, self.m, Q=self.Q)
         _x_problem.solve()
         self.x = _x_problem.soln
         self.duals = _x_problem.duals
@@ -173,15 +169,11 @@ class RegionSolver:
         delete_rows_constraints_only = _delete_rows_constraints_only.astype("int")
         # delete redundant rows from theta_matrix, duals and N also to avoid singular
         # matrix
-        _reduced_W = np.delete(
-            self.x_problem_W, delete_rows_constraints_only, axis=0
-        )
+        _reduced_W = np.delete(self.x_problem_W, delete_rows_constraints_only, axis=0)
         self.reduced_duals = np.delete(self.duals, delete_rows_constraints_only)
 
         self.N = np.zeros([np.shape(self.M)[0], self.theta_size])
-        self.N[self.x_size :] = np.multiply(
-            _reduced_W.T, self.reduced_duals
-        ).T
+        self.N[self.x_size :] = np.multiply(_reduced_W.T, self.reduced_duals).T
 
         self.MN = np.linalg.solve(self.M, self.N)
 

@@ -1,0 +1,9 @@
+numpy==1.21.4
+pyomo==6.1.2
+pydantic==1.8.2
+tox==3.24.4
+pathlib==1.0.1
+strictyaml==1.5.0
+typing==3.7.4.3
+joblib==1.1.0
+ruamel.yaml==0.17.17

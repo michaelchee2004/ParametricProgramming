@@ -44,10 +44,10 @@ def read_QmA_theta_b(file_name):
         data = np.loadtxt(data_file_path, delimiter=",")
         theta_size = int(data[0, 0])
         x_size = get_cols(data) - theta_size - 1
-        Q = data[1 : 1 + x_size, : x_size]
+        Q = data[1 : 1 + x_size, :x_size]
         m = data[1 + x_size, :x_size]
-        A = data[1 + x_size + 1 :, : x_size]
-        W = data[1 + x_size + 1 :, x_size : -1]
+        A = data[1 + x_size + 1 :, :x_size]
+        W = data[1 + x_size + 1 :, x_size:-1]
         b = data[1 + x_size + 1 :, -1].flatten()
         return Q, m, A, W, b
     raise OSError("Did not find file at path: {data_file_path}")

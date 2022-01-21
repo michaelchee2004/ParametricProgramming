@@ -45,7 +45,7 @@ setup(
     # exclude tests 
     packages=find_packages(exclude=("tests",)),
     # package_data receives a dict {package (i.e. folder): [file_name_or_wild_card.filetype]}
-    package_data={"regression_model": ["VERSION"]},
+    package_data={"parametric_model": ["VERSION"]},
     install_requires=list_reqs(),
     extras_require={},
     include_package_data=True,

@@ -3,10 +3,6 @@ include *.md
 include *.pkl
 recursive-include ./parametric_model/*
 
-include parametric_model/data/rc_test_data.csv
-include parametric_model/VERSION
-include parametric_model/config.yml
-
 include ./requirements/requirements.txt
 include ./requirements/test_requirements.txt
 exclude *.log
