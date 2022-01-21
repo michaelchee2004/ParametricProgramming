@@ -1,9 +1,14 @@
+"""Only for own use.
+"""
+
+
 import numpy as np
 
 from parametric_model.config.core import config
 from parametric_model.generate_regions import mp_data
 from parametric_model.processing.inputs import get_zeros_rows_index, load_mp
 from parametric_model.solvers.generic_solver import GenericSolver
+
 
 mp = load_mp()
 Q, m, A, W, b = mp_data()

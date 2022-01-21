@@ -150,13 +150,13 @@ class GenericSolver:
         # set solver depending on problem is LP or QP
         if self.Q is None or self.find_feasible is True:
             self.solver = pmo.SolverFactory(
-                self.lp_solver_setting, tee=self.tee, executable=self.lp_solver_path
+                self.lp_solver_setting, tee=self.tee
             )
             if self.lp_solver_setting == "cplex":
                 self.solver.options["lpmethod"] = 2
         else:
             self.solver = pmo.SolverFactory(
-                self.lp_solver_setting, tee=self.tee, executable=self.lp_solver_path
+                self.lp_solver_setting, tee=self.tee
             )
             if self.qp_solver_setting == "cplex":
                 self.solver.options["qpmethod"] = 2
@@ -187,39 +187,39 @@ class GenericSolver:
             self.active_const = self.duals >= self.qp_activedual_tol
 
 
-# A = np.array(
-#     [
-#         [1., 1., -1., 0.],
-#         [5., -4., 0., 0.],
-#         [-8., 22., 0., -1.],
-#         [-4., -1., 0., 0.],
-#         [0., 0., -1., 0.],
-#         [0., 0., 1., 0.],
-#         [0., 0., 0., -1.],
-#         [0., 0., 0., 1.],
-#         [0., 0., 1., -0.],
-#         [0., 0., -32., 1.]
-#     ]
-# )
+A = np.array(
+    [
+        [1., 1., -1., 0.],
+        [5., -4., 0., 0.],
+        [-8., 22., 0., -1.],
+        [-4., -1., 0., 0.],
+        [0., 0., -1., 0.],
+        [0., 0., 1., 0.],
+        [0., 0., 0., -1.],
+        [0., 0., 0., 1.],
+        [0., 0., 1., -0.],
+        [0., 0., -32., 1.]
+    ]
+)
 
-# b = np.array([13., 20., 121., -8.,
-#     10, 10., 100., 100., -7.08696658, 214.99999269])
+b = np.array([13., 20., 121., -8.,
+    10, 10., 100., 100., -7.08696658, 214.99999269])
 
-# Q = np.array(
-#     [
-#         [30. * 2., 0., 0., 0.],
-#         [0., 1. * 2, 0., 0.],
-#         [0., 0., 0., 0.],
-#         [0., 0., 0., 0.]
-#     ]
-# )
+Q = np.array(
+    [
+        [30. * 2., 0., 0., 0.],
+        [0., 1. * 2, 0., 0.],
+        [0., 0., 0., 0.],
+        [0., 0., 0., 0.]
+    ]
+)
 
-# m = np.array([0., 0., 0., 0.])
+m = np.array([0., 0., 0., 0.])
 
-# theta_size = 2
-# opt = GenericSolver(A, b, m, Q=Q, tee=False, find_feasible=True)
-# opt.solve()
-# print(opt.soln)
+theta_size = 2
+opt = GenericSolver(A, b, m, Q=Q, tee=False, find_feasible=True)
+opt.solve()
+print(opt.soln)
 
 # A = np.array(
 #     [[1.0, .0, -3.16515, -3.7546],

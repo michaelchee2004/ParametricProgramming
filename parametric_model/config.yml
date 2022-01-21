@@ -9,19 +9,14 @@ lp_region_test_data_file: lp_region_test_data.csv
 lp_mp_test_data_file: lp_mp_test_data.csv
 saved_model_file: mp
 
-# this is the most important, to remove redundant rows from M if max of the row
-# is smaller than this value
-# Too small, not enough boundaries are removed
-# Too big, too many boundaries are removed
+# rows from M are considered redundant if max in row is smaller than this value
 allclose_tol: 1e-9
 
 # lp_solver_path: 'C:\\w64\glpsol'
 # lp_solver_setting: 'glpk'
 # qp_solver_path: 'C:\\cygwin64\\home\\user1\\Ipopt-3.12.12\\bin\\ipopt'
 # qp_solver_setting: 'ipopt'
-lp_solver_path: C:\Program Files\IBM\ILOG\CPLEX_Studio_Community128\cplex\bin\x64_win64\cplex
 lp_solver_setting: cplex
-qp_solver_path: C:\Program Files\IBM\ILOG\CPLEX_Studio_Community128\cplex\bin\x64_win64\cplex
 qp_solver_setting: cplex
 
 # redundancy_checker
@@ -30,14 +25,12 @@ zero_tol: 1e-9
 
 # generic_solver
 # constraints with dual larger than this is considered active
-# Too big, then active constraints are missed
-# Too small, then too many active constraints 
-# for LP, glpk automatically make inactive duals exactly zero
 lp_activedual_tol: 1e-12
 qp_activedual_tol: 1e-12
 
 # region generator
-# now set to basically no shift
+# shift boundary a little when creating a new region to prevent overlaps
+# due to 
 lp_newregion_tol: 1e-12
 qp_newregion_tol: 1e-12 
 
