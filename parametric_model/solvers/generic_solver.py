@@ -50,10 +50,8 @@ class GenericSolver:
             based on attribute 'activedual_tol'
     """
 
-    lp_solver_path = config.solver_config.lp_solver_path
     lp_solver_setting = config.solver_config.lp_solver_setting
     lp_activedual_tol = config.solver_config.lp_activedual_tol
-    qp_solver_path = config.solver_config.qp_solver_path
     qp_solver_setting = config.solver_config.qp_solver_setting
     qp_activedual_tol = config.solver_config.qp_activedual_tol
 

@@ -21,10 +21,8 @@ class AppConfig(BaseModel):
 
 
 class SolverConfig(BaseModel):
-    lp_solver_path: str
     lp_solver_setting: str
     lp_activedual_tol: float
-    qp_solver_path: str
     qp_solver_setting: str
     qp_activedual_tol: float
 

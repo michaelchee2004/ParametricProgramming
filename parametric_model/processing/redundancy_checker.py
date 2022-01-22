@@ -33,7 +33,6 @@ class RedundancyChecker:
         reduced_b (ndarray): 1D array, b with redundant rows removed
     """
 
-    solver_path = config.solver_config.lp_solver_path
     solver_setting = config.solver_config.lp_solver_setting
 
     def __init__(
@@ -91,7 +90,7 @@ class RedundancyChecker:
                 <= self.model.b[c]
             )
         self.solver = pmo.SolverFactory(
-            self.solver_setting, executable=self.solver_path
+            self.solver_setting
         )
         if self.solver_setting == "cplex":
             self.solver.options["lpmethod"] = 2
