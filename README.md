@@ -1,53 +1,55 @@
 # ParametricProgramming
 
+![alt text](https://github.com/michaelchee2004/ParametricProgramming/blob/master/readme_image.png)
+
 ## Introduction
 This package is made to solve simple multi-parametric (mp-) LP and QP problems. <br/>
+
 The problem is in the form: <br/>
 
-  __min (XT)QX + mX__ <br/>
-  __s.t. AX <= b__ <br/>
-  
-where <br/>
-- X: an array of both optimsed variables x and varying parameters θ. Note θ are always listed behind x.
-- XT: transposed X
+```
+min 1/2 (x_T)Qx + mx
+  s.t. Ax + Wθ <= b
+
+where
+- x: optimsed variables 
+- x_T: transposed x
+- θ: 'unfixed' input parameters of optimisation problem
 - Q: coefficients for quadratic terms in objective
 - m: coefficients for linear terms in objective
 - A: coefficients for constraint matrix 
 - b: constants for constraint matrix
+```
+
+We would like to understand how __x*__, the optimal solution of __x__, varies depending on 
+input parameters __θ__.
+
+i.e. express __x*__ as a function of __θ__.
+
+## Installation
+Download the wheel file: [link](https://github.com/michaelchee2004/ParametricProgramming/blob/master/dist/parametric_programming-0.0.1-py3-none-any.whl)
+
+```pip install package_whl_path```
+
+Note the package assumes cplex to be available and callable as PATH environment variable. 
+Can be changed to other solvers through editing in config.yml, but a very good solver is necessary 
+to ensure accurate categorisation of constraints as active/inactive. GLPK, etc. have been observed to give wrong 
+results, possibly because they need tuning.
 
 ## Usage
-To use, simply:
-
-```
-from parametric_model.solvers.region_generator import ParametricSolver
-
-A = ...
-b = ...
-m = ...
-theta_size = ...
-Q = ...
-
-mp = ParametricSolver(A, b, m, theta_size, Q=Q)
-mp.solve()
-theta = [0.7, 0.7]
-mp.get_soln(theta)
-```
-
-Note Q is optional. If Q is supplied, the problem is treated as mp-QP. Otherwise, it is treated as mp-LP.
-
-`theta_size` is used to determine how many: 
-- columns in 2D array A, 
-- elements in 1D array m, and
-- rows and columns in 2D array Q 
-
-correspond to coefficients for θ. Note θ always occupy the last theta_size number of rows/columns in each case.
+- [mp-LP example (motivating example)](https://github.com/michaelchee2004/ParametricProgramming/blob/master/jupyter_notebooks/lp_example.ipynb)
+- [mp-QP example](https://github.com/michaelchee2004/ParametricProgramming/blob/master/jupyter_notebooks/qp_example.ipynb)
 
 ## Notes
-Unfortunately the current mp-QP solver is less robust than mp-LP. This is because it turns out that with a solver like ipopt, it is not easy to determine which constraints are active. With no direct indicator for constraint activeness, consider the following two methods:
-- __whether dual is non-zero:__ it turns out duals for inactive constraints also have a small value in ipopt; our LP solver glpk does not have this problem
-- __whether the constraint slack is zero:__ even worse than using dual, because active constraints actually have a small slack, and this is bigger than the duals of inactive constraints - this means it is even harder to differentiate between slack of active vs. inactive constraints 
-
-In config.yml a tolerance is provided on the dual where constraints with dual larger than this is considered active. However, currently no good way to calibrate the tol.
+I made this package for a few reasons:
+- As a test bed for self-learning python </br >
+  (learned `pydantic`, `pytest`, `tox`, and python project organisation and packaging in the process)
+- To hopefully aid analysis of optimisation models at work </br>
+  (power market models)
+- Although packages for solving parametric-programming problems have been made available on MatLab, a painful gap exists in python. </br>
+  This project therefore presents a very novel and interesting challenge for me to both further my knowledge in optimisation and gain more experience with python. </br>
+  
+(Very recently - Sept 2021, a package for solving mp has been released by the Multi-parametric Optimization & Control group at Taxas A&M: [ppopt](https://pypi.org/project/ppopt/). This project started before that package was made.)  
 
 ## Developments
 Potential future developments include:
@@ -57,4 +59,3 @@ Potential future developments include:
 - (nice to have) representing region boundaries in concatenated form [slope constant] rather than storing them separately
 - solving mp-MILP
 - Make a reader for LP files from Xpress/cplex, so that mp can be solved on Xpress/cplex modelled problems
-- Tidy up commit messages on GitHub
