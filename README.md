@@ -3,9 +3,9 @@
 ![alt text](https://github.com/michaelchee2004/ParametricProgramming/blob/master/readme_image.png)
 
 ## Introduction
-This package is made to solve simple multi-parametric (mp-) LP and QP problems. [Wikipedia](https://en.wikipedia.org/wiki/Parametric_programming) / [Book](https://www.wiley.com/en-ie/Multi+Parametric+Programming:+Theory,+Algorithms+and+Applications,+Volume+1-p-9783527631216)
+This package is made to solve simple Multi-Parametric LP and QP problems (mp-LP, mp-QP). [Wikipedia](https://en.wikipedia.org/wiki/Parametric_programming) / [Book](https://www.wiley.com/en-ie/Multi+Parametric+Programming:+Theory,+Algorithms+and+Applications,+Volume+1-p-9783527631216)
 
-The problem is in the form: <br/>
+The optimisation problem is in the form: <br/>
 
 ```
 min 1/2 (x_T)Qx + mx
@@ -17,12 +17,12 @@ where
 - θ: 'unfixed' input parameters of optimisation problem
 - Q: coefficients for quadratic terms in objective
 - m: coefficients for linear terms in objective
-- A: coefficients for constraint matrix 
-- b: constants for constraint matrix
+- A: coefficients for x in constraint matrix 
+- b: constants in constraint matrix
 ```
 
 We would like to understand how __x*__, the optimal solution of __x__, varies depending on 
-input parameters __θ__.
+input parameters __θ__,
 
 i.e. express __x*__ as a function of __θ__.
 
