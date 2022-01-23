@@ -29,6 +29,7 @@ i.e. express __x*__ as a function of __θ__.
 ## Installation
 Download the wheel file: [link](https://github.com/michaelchee2004/ParametricProgramming/blob/master/dist/parametric_programming-0.0.1-py3-none-any.whl)
 
+Then, </br>
 ```pip install package_whl_path```
 
 Note the package assumes cplex to be available and callable as PATH environment variable (free version is sufficient to run examples). 
