@@ -3,7 +3,7 @@
 ![alt text](https://github.com/michaelchee2004/ParametricProgramming/blob/master/readme_image.png)
 
 ## Introduction
-This package is made to solve simple multi-parametric (mp-) LP and QP problems. <br/>
+This package is made to solve simple multi-parametric (mp-) LP and QP problems. [Wikipedia](https://en.wikipedia.org/wiki/Parametric_programming) / [Book](https://www.wiley.com/en-ie/Multi+Parametric+Programming:+Theory,+Algorithms+and+Applications,+Volume+1-p-9783527631216)
 
 The problem is in the form: <br/>
 
@@ -31,7 +31,7 @@ Download the wheel file: [link](https://github.com/michaelchee2004/ParametricPro
 
 ```pip install package_whl_path```
 
-Note the package assumes cplex to be available and callable as PATH environment variable. 
+Note the package assumes cplex to be available and callable as PATH environment variable (free version is sufficient to run examples). 
 Can be changed to other solvers through editing in config.yml, but a very good solver is necessary 
 to ensure accurate categorisation of constraints as active/inactive. GLPK, etc. have been observed to give wrong 
 results, possibly because they need tuning.
@@ -42,14 +42,13 @@ results, possibly because they need tuning.
 
 ## Notes
 I made this package for a few reasons:
-- As a test bed for self-learning python </br >
-  (learned `pydantic`, `pytest`, `tox`, and python project organisation and packaging in the process)
-- To hopefully aid analysis of optimisation models at work </br>
-  (power market models)
+- For self-learning python </br >
+  (learned `pydantic`, `pytest`, `tox`, tooling (`isort`, `flake8`, etc.) and python project organisation and packaging in the process)
+- To hopefully aid analysis of optimisation models at work (power market models)
 - Although packages for solving parametric-programming problems have been made available on MatLab, a painful gap exists in python. </br>
   This project therefore presents a very novel and interesting challenge for me to both further my knowledge in optimisation and gain more experience with python. </br>
   
-(Very recently - Sept 2021, a package for solving mp has been released by the Multi-parametric Optimization & Control group at Taxas A&M: [ppopt](https://pypi.org/project/ppopt/). This project started before that package was made.)  
+(Very recently - Sept 2021, a package for solving mp has been released by the Multi-parametric Optimization & Control group at Taxas A&M: [ppopt](https://pypi.org/project/ppopt/). That package was not yet developed when I started this project in 2020.)  
 
 ## Developments
 Potential future developments include:
