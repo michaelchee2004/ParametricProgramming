@@ -46,8 +46,8 @@ I made this package for a few reasons:
 - For self-learning python </br >
   (learned `pydantic`, `pytest`, `tox`, tooling (`isort`, `flake8`, etc.) and python project organisation and packaging in the process)
 - To hopefully aid analysis of optimisation models at work (power market models)
-- Although packages for solving parametric-programming problems have been made available on MatLab, a painful gap exists in python. </br>
-  This project therefore presents a very novel and interesting challenge for me to both further my knowledge in optimisation and gain more experience with python. </br>
+- Although packages for solving parametric-programming problems have been developed on MatLab, a painful gap exists in python. </br>
+  This project therefore presents a novel and interesting challenge to both further knowledge in optimisation and gain more experience with python. </br>
   
 (Very recently - Sept 2021, a package for solving mp has been released by the Multi-parametric Optimization & Control group at Taxas A&M: [ppopt](https://pypi.org/project/ppopt/). That package was not yet developed when I started this project in 2020.)  
 
