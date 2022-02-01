@@ -5,7 +5,7 @@
 ## Introduction
 This package is made to solve simple Multi-Parametric LP and QP problems (mp-LP, mp-QP). [Wikipedia](https://en.wikipedia.org/wiki/Parametric_programming) / [Book](https://www.wiley.com/en-ie/Multi+Parametric+Programming:+Theory,+Algorithms+and+Applications,+Volume+1-p-9783527631216)
 
-The optimisation problem is in the form: <br/>
+The optimisation problem is in the form. Notice the presence of θ that deviates from usual QP formulation: <br/>
 
 ```
 min 1/2 (x_T)Qx + mx
@@ -18,6 +18,7 @@ where
 - Q: coefficients for quadratic terms in objective
 - m: coefficients for linear terms in objective
 - A: coefficients for x in constraint matrix 
+- W: coefficients for θ in constraint matrix
 - b: constants in constraint matrix
 ```
 
