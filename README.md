@@ -45,7 +45,7 @@ results, possibly because they need tuning.
 ## Notes
 I made this package for a few reasons:
 - For self-learning python </br >
-  (learned `pydantic`, `pytest`, `tox`, tooling (`isort`, `flake8`, etc.) and python project organisation and packaging in the process)
+  (gained a lot of valuable experience with testing, python project organisation and packaging in the process)
 - To hopefully aid analysis of optimisation models at work (power market models)
 - Although packages for solving parametric-programming problems have been developed on MatLab, a painful gap exists in python. </br>
   This project therefore presents a novel and interesting challenge to both further knowledge in optimisation and gain more experience with python. </br>
