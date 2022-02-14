@@ -46,7 +46,7 @@ results, possibly because they need tuning.
 Although packages for solving parametric-programming problems have been developed on MatLab, a painful gap exists in python. </br>
 This project therefore presents a novel and interesting personal challenge to both further knowledge in optimisation and gain more experience with python. </br>
 
-(Very recently - Sept 2021, a package for solving mp has been released by the Multi-parametric Optimization & Control group at Taxas A&M: [ppopt](https://pypi.org/project/ppopt/), although with limited functionality for now. That package was not yet developed when I started this project in 2020.)  
+(Very recently - Sept 2021, a package for solving mp has been released by the Multi-parametric Optimization & Control group at Taxas A&M: [ppopt](https://pypi.org/project/ppopt/), although with limited functionality for now.)  
 
 ## Developments
 Potential future developments include:
