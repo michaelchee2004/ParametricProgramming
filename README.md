@@ -42,11 +42,9 @@ results, possibly because they need tuning.
 - [mp-LP example (motivating example)](https://github.com/michaelchee2004/ParametricProgramming/blob/master/jupyter_notebooks/lp_example.ipynb)
 - [mp-QP example](https://github.com/michaelchee2004/ParametricProgramming/blob/master/jupyter_notebooks/qp_example.ipynb)
 
-## Notes
-This package has been made for a few reasons:
-- Although packages for solving parametric-programming problems have been developed on MatLab, a painful gap exists in python. </br>
-  This project therefore presents a novel and interesting personal challenge to both further knowledge in optimisation and gain more experience with python. </br>
-- To hopefully aid analysis of optimisation models at work (power market models)
+## Motivation
+Although packages for solving parametric-programming problems have been developed on MatLab, a painful gap exists in python. </br>
+This project therefore presents a novel and interesting personal challenge to both further knowledge in optimisation and gain more experience with python. </br>
 
 (Very recently - Sept 2021, a package for solving mp has been released by the Multi-parametric Optimization & Control group at Taxas A&M: [ppopt](https://pypi.org/project/ppopt/), although with limited functionality for now. That package was not yet developed when I started this project in 2020.)  
 
